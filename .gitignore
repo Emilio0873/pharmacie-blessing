@@ -1,0 +1,29 @@
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# PHP / Composer
+vendor/
+.phpunit.result.cache
+
+# Local env / secrets
+.env
+.env.*
+!.env.example
+
+# Runtime uploads (keep folder)
+uploads/*
+!uploads/.gitkeep
+
+# Database backups
+backups/*
+!backups/.gitkeep
+
+# Logs
+*.log

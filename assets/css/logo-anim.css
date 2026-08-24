@@ -1,0 +1,19 @@
+/* Logo — rotation continue comme une aiguille de montre */
+@keyframes logo-clock-spin {
+    from { transform: rotate(0deg); }
+    to   { transform: rotate(360deg); }
+}
+
+.logo-clock {
+    animation: logo-clock-spin 12s linear infinite;
+    transform-origin: center center;
+    will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .logo-clock { animation: none; }
+}
+
+@media print {
+    .logo-clock { animation: none !important; }
+}
