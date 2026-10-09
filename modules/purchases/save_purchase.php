@@ -8,6 +8,10 @@ if (!is_logged_in()) {
     echo json_encode(['success' => false, 'message' => 'Non authentifié']);
     exit();
 }
+if (!in_array($_SESSION['role'] ?? '', ['Super Admin', 'Admin', 'Magasinier'])) {
+    echo json_encode(['success' => false, 'message' => 'Accès non autorisé']);
+    exit();
+}
 
 $data = json_decode(file_get_contents('php://input'), true);
 

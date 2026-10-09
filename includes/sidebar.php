@@ -60,7 +60,7 @@
         </li>
         <?php endif; ?>
 
-        <?php if (has_role('Super Admin') || has_role('Admin')): ?>
+        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Magasinier')): ?>
         <li class="sidebar-label px-3 pt-3 pb-2 text-uppercase fw-bold">Achats</li>
         <li class="mb-2">
             <a href="<?php echo $base_url; ?>/modules/purchases/index.php" class="nav-link p-3 rounded">
@@ -78,13 +78,15 @@
         </li>
         <?php endif; ?>
 
-        <?php if (has_role('Super Admin') || has_role('Admin')): ?>
+        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Magasinier')): ?>
         <li class="mb-2">
             <a href="<?php echo $base_url; ?>/modules/suppliers/index.php" class="nav-link p-3 rounded">
                 Fournisseurs
             </a>
         </li>
+        <?php endif; ?>
 
+        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Magasinier')): ?>
         <li class="sidebar-label px-3 pt-3 pb-2 text-uppercase fw-bold">Système</li>
         <li class="mb-2">
             <a href="<?php echo $base_url; ?>/modules/reports/index.php" class="nav-link p-3 rounded <?php echo (strpos($_SERVER['PHP_SELF'], '/modules/reports/') !== false && basename($_SERVER['PHP_SELF']) === 'index.php') ? 'active' : ''; ?>">

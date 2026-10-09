@@ -29,7 +29,7 @@ function getPeriodStats($pdo, $year, $month = null, $day = null) {
         $params[] = $day;
     }
 
-    $sales = $pdo->prepare("SELECT SUM(total_amount) FROM sales $where_sales");
+    $sales = $pdo->prepare("SELECT SUM(final_amount) FROM sales $where_sales");
     $sales->execute($params);
     $total_sales = $sales->fetchColumn() ?: 0;
 
@@ -323,7 +323,7 @@ require_once '../../includes/header.php';
                             <td class="ps-4 fw-bold">#<?php echo str_pad($s['id'], 5, '0', STR_PAD_LEFT); ?></td>
                             <td><?php echo date('d/m/Y H:i', strtotime($s['sale_date'])); ?></td>
                             <td><?php echo htmlspecialchars($s['client_name'] ?? 'Client de passage'); ?></td>
-                            <td class="fw-bold text-success"><?php echo format_currency($s['total_amount']); ?></td>
+                            <td class="fw-bold text-success"><?php echo format_currency($s['final_amount']); ?></td>
                             <td class="text-end pe-4">
                                 <a href="../sales/invoice.php?id=<?php echo $s['id']; ?>" target="_blank" class="btn btn-sm btn-outline-secondary"><i class="fas fa-print me-1"></i>Facture</a>
                                 <a href="../sales/invoice.php?id=<?php echo $s['id']; ?>&download=pdf" target="_blank" class="btn btn-sm btn-outline-primary ms-1"><i class="fas fa-download me-1"></i>PDF</a>

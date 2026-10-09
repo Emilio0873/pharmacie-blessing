@@ -33,11 +33,10 @@ function has_role($role_name) {
  */
 function authorize($allowed_roles) {
     if (!is_logged_in()) {
-        redirect('/PHARMACIE BLESSING/index.php');
+        redirect('/PHARMACIE%20BLESSING/index.php');
     }
     if (!in_array($_SESSION['role'], $allowed_roles)) {
-        // Redirect to dashboard with error or just block
-        header("Location: /PHARMACIE BLESSING/dashboard.php?error=unauthorized");
+        header("Location: /PHARMACIE%20BLESSING/dashboard.php?error=unauthorized");
         exit();
     }
 }

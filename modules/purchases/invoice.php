@@ -2,6 +2,11 @@
 require_once '../../config/db.php';
 require_once '../../includes/functions.php';
 
+if (!is_logged_in()) {
+    redirect('../../index.php');
+}
+authorize(['Super Admin', 'Admin', 'Magasinier']);
+
 $business = get_business_profile($pdo);
 
 if (!isset($_GET['id'])) {

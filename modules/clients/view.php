@@ -21,7 +21,7 @@ $stmt_sales = $pdo->prepare("SELECT s.*, u.full_name as user_name FROM sales s
 $stmt_sales->execute([$id]);
 $sales = $stmt_sales->fetchAll();
 
-$total_spent    = array_sum(array_column($sales, 'total_amount'));
+$total_spent    = array_sum(array_column($sales, 'final_amount'));
 $total_discount = array_sum(array_column($sales, 'discount'));
 $avg_sale       = count($sales) > 0 ? $total_spent / count($sales) : 0;
 
@@ -31,7 +31,7 @@ for ($i = 5; $i >= 0; $i--) {
     $month_start = date('Y-m-01', strtotime("-$i months"));
     $month_end   = date('Y-m-t',  strtotime("-$i months"));
     $label       = date('M Y',    strtotime("-$i months"));
-    $stmt_m = $pdo->prepare("SELECT SUM(total_amount) FROM sales WHERE client_id=? AND DATE(sale_date) BETWEEN ? AND ?");
+    $stmt_m = $pdo->prepare("SELECT SUM(final_amount) FROM sales WHERE client_id=? AND DATE(sale_date) BETWEEN ? AND ?");
     $stmt_m->execute([$id, $month_start, $month_end]);
     $monthly_data[] = ['label' => $label, 'total' => $stmt_m->fetchColumn() ?: 0];
 }

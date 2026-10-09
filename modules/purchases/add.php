@@ -4,6 +4,7 @@ require_once '../../config/db.php';
 require_once '../../includes/functions.php';
 
 if (!is_logged_in()) redirect('../../index.php');
+authorize(['Super Admin', 'Admin', 'Magasinier']);
 
 $suppliers = $pdo->query("SELECT * FROM suppliers ORDER BY name ASC")->fetchAll();
 $products = $pdo->query("SELECT * FROM products ORDER BY name ASC")->fetchAll();

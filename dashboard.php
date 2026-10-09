@@ -9,7 +9,7 @@ if (!is_logged_in()) {
 
 // Redirect role-specific users before any HTML is sent
 if (has_role('Caissier')) {
-    redirect('modules/sales/index.php');
+    redirect('modules/caisse/index.php');
 }
 if (has_role('Magasinier')) {
     redirect('modules/products/index.php');
