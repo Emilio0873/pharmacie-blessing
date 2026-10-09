@@ -70,7 +70,7 @@ $purchases_query = $pdo->prepare("
 $purchases_query->execute([$selected_year, $selected_month]);
 $purchases_grouped = $purchases_query->fetchAll(PDO::FETCH_KEY_PAIR);
 
-$days_in_month = cal_days_in_month(CAL_GREGORIAN, $selected_month, $selected_year);
+$days_in_month = (int)date('t', mktime(0, 0, 0, (int)$selected_month, 1, (int)$selected_year));
 $chart_days = [];
 $chart_sales = [];
 $chart_purchases = [];
