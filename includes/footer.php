@@ -7,6 +7,11 @@
 
     <!-- Bootstrap 5 Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+    document.querySelectorAll('.modal').forEach(function (modal) {
+        document.body.appendChild(modal);
+    });
+    </script>
     <script src="<?php echo app_base_url('assets/js/script.js'); ?>"></script>
     <script src="<?php echo app_base_url('assets/js/theme.js'); ?>"></script>
     <!-- Sidebar Toggle -->

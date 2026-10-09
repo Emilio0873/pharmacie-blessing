@@ -175,6 +175,14 @@ body.sidebar-open {
     z-index: 1;
 }
 
+.modal-backdrop {
+    z-index: 1055;
+}
+
+.modal {
+    z-index: 1060;
+}
+
 .container-fluid {
     color: var(--text-main);
     min-width: 0;

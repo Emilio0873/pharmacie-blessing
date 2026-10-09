@@ -121,7 +121,7 @@ require_once '../../includes/header.php';
 
 <!-- Modal Payment -->
 <div class="modal fade" id="paymentModal" tabindex="-1" aria-labelledby="paymentModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
         <div class="modal-content pos-pay-modal border-0 shadow-lg">
             <div class="modal-header border-0 pb-0">
                 <div>

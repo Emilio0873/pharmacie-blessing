@@ -4,6 +4,12 @@
  */
 
 document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.modal').forEach(function (modal) {
+        if (modal.parentElement !== document.body) {
+            document.body.appendChild(modal);
+        }
+    });
+
     // Auto-dismiss alerts after 5 seconds
     document.querySelectorAll('.alert-dismissible').forEach(function(alert) {
         setTimeout(function() {
