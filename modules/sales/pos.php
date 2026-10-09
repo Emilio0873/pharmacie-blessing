@@ -4,7 +4,7 @@ require_once '../../config/db.php';
 require_once '../../includes/functions.php';
 
 if (!is_logged_in()) redirect('../../index.php');
-authorize(['Super Admin', 'Admin', 'Caissier']);
+authorize(['Super Admin', 'Admin']);
 
 $categories = $pdo->query("SELECT * FROM categories ORDER BY name ASC")->fetchAll();
 $products = $pdo->query("SELECT p.*, c.name as category_name FROM products p JOIN categories c ON p.category_id = c.id WHERE p.qty > 0 ORDER BY p.name ASC")->fetchAll();

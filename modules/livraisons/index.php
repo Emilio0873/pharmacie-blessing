@@ -45,6 +45,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valid()) {
 
 $pending = $pdo->query(
     "SELECT s.id, s.sale_date, s.final_amount, s.delivery_status, s.fulfillment_type, s.geo_lat, s.geo_lng,
+            s.pickup_date, s.location_commune, s.location_avenue, s.location_landmark,
             c.name AS client_name, c.phone AS client_phone, c.address AS client_address,
             inv.invoice_number
      FROM sales s
@@ -71,7 +72,7 @@ require_once '../../includes/header.php';
 <div class="row mb-4">
     <div class="col-12">
         <h3 class="fw-bold mb-1">Commandes à remettre</h3>
-        <p class="text-muted mb-0">Après paiement caisse uniquement. Utilisez <strong>À retirer</strong> si le client laisse la marchandise au dépôt, puis <strong>Remise effectuée</strong> quand il la récupère ou quand la livraison domicile est faite.</p>
+        <p class="text-muted mb-0">Après paiement caisse uniquement. Validez soit la <strong>livraison</strong>, soit <strong>À retirer</strong> (récupération au dépôt, avec le jour indiqué). Puis <strong>Remise effectuée</strong> quand le client prend sa marchandise.</p>
     </div>
 </div>
 
@@ -111,8 +112,17 @@ require_once '../../includes/header.php';
                                     <?php if (!empty($row['client_phone'])): ?>
                                         <div class="small text-muted"><?php echo htmlspecialchars($row['client_phone']); ?></div>
                                     <?php endif; ?>
-                                    <?php if (!empty($row['client_address'])): ?>
+                                    <?php if (!empty($row['location_commune']) || !empty($row['location_avenue'])): ?>
+                                        <div class="small text-muted">
+                                            <?php echo htmlspecialchars(build_location_address($row['location_commune'] ?? '', $row['location_avenue'] ?? '', $row['location_landmark'] ?? '', $row['client_address'] ?? '')); ?>
+                                        </div>
+                                    <?php elseif (!empty($row['client_address'])): ?>
                                         <div class="small text-muted"><?php echo htmlspecialchars($row['client_address']); ?></div>
+                                    <?php endif; ?>
+                                    <?php if (!empty($row['pickup_date'])): ?>
+                                        <div class="small fw-bold text-primary mt-1">
+                                            Jour prévu : <?php echo date('d/m/Y', strtotime($row['pickup_date'])); ?>
+                                        </div>
                                     <?php endif; ?>
                                     <div class="small text-muted mt-1">
                                         <?php foreach ($lines as $line): ?>
@@ -123,7 +133,7 @@ require_once '../../includes/header.php';
                                         <a class="btn btn-sm btn-outline-primary mt-1" href="<?php echo htmlspecialchars($map); ?>" target="_blank" rel="noopener">Localiser</a>
                                     <?php endif; ?>
                                 </td>
-                                <td><?php echo $isDelivery ? 'Livraison' : 'Retrait'; ?></td>
+                                <td><?php echo $isDelivery ? 'Livraison' : 'À récupérer'; ?></td>
                                 <td><?php echo format_currency($row['final_amount']); ?></td>
                                 <td>
                                     <?php

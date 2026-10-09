@@ -118,6 +118,10 @@ function ensure_sale_fulfillment_columns(PDO $pdo): void {
     ensure_column($pdo, 'sales', 'fulfillment_type', "fulfillment_type VARCHAR(40) NOT NULL DEFAULT 'retrait_depot'");
     ensure_column($pdo, 'sales', 'geo_lat', 'geo_lat DECIMAL(10,7) NULL');
     ensure_column($pdo, 'sales', 'geo_lng', 'geo_lng DECIMAL(10,7) NULL');
+    ensure_column($pdo, 'sales', 'pickup_date', 'pickup_date DATE NULL');
+    ensure_column($pdo, 'sales', 'location_commune', 'location_commune VARCHAR(120) NULL');
+    ensure_column($pdo, 'sales', 'location_avenue', 'location_avenue VARCHAR(180) NULL');
+    ensure_column($pdo, 'sales', 'location_landmark', 'location_landmark VARCHAR(180) NULL');
 }
 
 function ensure_counter_order_tables(PDO $pdo): void {
@@ -154,6 +158,10 @@ function ensure_counter_order_tables(PDO $pdo): void {
         CONSTRAINT fk_counter_order_items_order FOREIGN KEY (order_id) REFERENCES counter_orders(id)
             ON UPDATE CASCADE ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    ensure_column($pdo, 'counter_orders', 'location_commune', 'location_commune VARCHAR(120) NULL');
+    ensure_column($pdo, 'counter_orders', 'location_avenue', 'location_avenue VARCHAR(180) NULL');
+    ensure_column($pdo, 'counter_orders', 'location_landmark', 'location_landmark VARCHAR(180) NULL');
 }
 
 function ensure_reservation_tables(PDO $pdo): void {
@@ -192,6 +200,9 @@ function ensure_reservation_tables(PDO $pdo): void {
     ensure_column($pdo, 'reservations', 'fulfillment_type', "fulfillment_type VARCHAR(40) NOT NULL DEFAULT 'retrait_depot'");
     ensure_column($pdo, 'reservations', 'geo_lat', 'geo_lat DECIMAL(10,7) NULL');
     ensure_column($pdo, 'reservations', 'geo_lng', 'geo_lng DECIMAL(10,7) NULL');
+    ensure_column($pdo, 'reservations', 'location_commune', 'location_commune VARCHAR(120) NULL');
+    ensure_column($pdo, 'reservations', 'location_avenue', 'location_avenue VARCHAR(180) NULL');
+    ensure_column($pdo, 'reservations', 'location_landmark', 'location_landmark VARCHAR(180) NULL');
 }
 
 function sync_business_phone(PDO $pdo): void {

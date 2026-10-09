@@ -68,9 +68,9 @@
             </a>
         </li>
         <?php endif; ?>
-        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Caissier')): ?>
+        <?php if (has_role('Super Admin') || has_role('Admin')): ?>
         <li class="mb-2">
-            <a href="<?php echo $base_url; ?>/modules/sales/pos.php" class="nav-link p-3 rounded fw-bold">
+            <a href="<?php echo $base_url; ?>/modules/sales/pos.php" class="nav-link p-3 rounded">
                 Vente Rapide (POS)
             </a>
         </li>

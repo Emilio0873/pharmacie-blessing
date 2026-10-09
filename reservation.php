@@ -21,12 +21,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $firstName = trim(strip_tags($_POST['first_name'] ?? ''));
         $phone = trim(strip_tags($_POST['phone'] ?? ''));
         $email = trim(strip_tags($_POST['email'] ?? ''));
-        $address = trim(strip_tags($_POST['address'] ?? ''));
+        $commune = trim(strip_tags($_POST['location_commune'] ?? ''));
+        $avenue = trim(strip_tags($_POST['location_avenue'] ?? ''));
+        $landmark = trim(strip_tags($_POST['location_landmark'] ?? ''));
+        $addressExtra = trim(strip_tags($_POST['address'] ?? ''));
         $pickup = $_POST['pickup_date'] ?? '';
         $fulfillment = ($_POST['fulfillment_type'] ?? 'retrait_depot') === 'livraison_domicile' ? 'livraison_domicile' : 'retrait_depot';
         $geoLat = trim($_POST['geo_lat'] ?? '');
         $geoLng = trim($_POST['geo_lng'] ?? '');
         $cart = json_decode($_POST['cart_json'] ?? '[]', true);
+        $address = $fulfillment === 'livraison_domicile'
+            ? build_location_address($commune, $avenue, $landmark, $addressExtra)
+            : $addressExtra;
 
         if ($lastName === '' || $firstName === '') {
             $error = 'Indiquez le nom et le prénom.';
@@ -35,11 +41,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         } elseif ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $error = 'L’adresse e-mail n’est pas valide.';
         } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $pickup) || $pickup < date('Y-m-d')) {
-            $error = 'Choisissez une date ' . ($fulfillment === 'livraison_domicile' ? 'de livraison' : 'de retrait') . ' à partir d’aujourd’hui.';
-        } elseif ($fulfillment === 'livraison_domicile' && $address === '') {
-            $error = 'Indiquez l’adresse de livraison à domicile.';
+            $error = $fulfillment === 'livraison_domicile'
+                ? 'Indiquez le jour de livraison souhaité.'
+                : 'Indiquez le jour de récupération de votre marchandise au dépôt.';
+        } elseif ($fulfillment === 'livraison_domicile' && ($commune === '' || $avenue === '' || $landmark === '')) {
+            $error = 'Pour la livraison, renseignez la commune/quartier, l’avenue ou rue, et un point de repère.';
         } elseif ($fulfillment === 'livraison_domicile' && (!is_numeric($geoLat) || !is_numeric($geoLng))) {
-            $error = 'Activez la géolocalisation pour la livraison à domicile, afin que le livreur puisse vous trouver.';
+            $error = 'Partagez votre position GPS pour que le livreur puisse vous localiser.';
         } elseif (!is_array($cart) || count($cart) === 0) {
             $error = 'Ajoutez au moins un produit au panier.';
         } else {
@@ -77,8 +85,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $tempRef = 'TMP-' . bin2hex(random_bytes(8));
                 $stmt = $pdo->prepare("INSERT INTO reservations
-                    (reference, last_name, first_name, phone, email, address, pickup_date, status, subtotal, fulfillment_type, geo_lat, geo_lng)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, 'en_attente', ?, ?, ?, ?)");
+                    (reference, last_name, first_name, phone, email, address, pickup_date, status, subtotal, fulfillment_type, geo_lat, geo_lng, location_commune, location_avenue, location_landmark)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 'en_attente', ?, ?, ?, ?, ?, ?, ?)");
                 $stmt->execute([
                     $tempRef,
                     $lastName,
@@ -91,6 +99,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $fulfillment,
                     $fulfillment === 'livraison_domicile' ? (float)$geoLat : null,
                     $fulfillment === 'livraison_domicile' ? (float)$geoLng : null,
+                    $fulfillment === 'livraison_domicile' ? $commune : null,
+                    $fulfillment === 'livraison_domicile' ? $avenue : null,
+                    $fulfillment === 'livraison_domicile' ? $landmark : null,
                 ]);
                 $reservationId = (int)$pdo->lastInsertId();
                 $reference = format_reservation_number($reservationId);
@@ -186,7 +197,7 @@ render_public_chrome_start('Réserver une commande — Pharmacie Blessing');
                         <label class="form-label d-block">Mode de remise</label>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="fulfillment_type" id="modeRetrait" value="retrait_depot" <?php echo (($_POST['fulfillment_type'] ?? 'retrait_depot') !== 'livraison_domicile') ? 'checked' : ''; ?>>
-                            <label class="form-check-label" for="modeRetrait">Retrait au dépôt</label>
+                            <label class="form-check-label" for="modeRetrait">À récupérer au dépôt</label>
                         </div>
                         <div class="form-check">
                             <input class="form-check-input" type="radio" name="fulfillment_type" id="modeLivraison" value="livraison_domicile" <?php echo (($_POST['fulfillment_type'] ?? '') === 'livraison_domicile') ? 'checked' : ''; ?>>
@@ -194,8 +205,9 @@ render_public_chrome_start('Réserver une commande — Pharmacie Blessing');
                         </div>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label" for="pickup_date" id="dateLabel">Date de retrait au dépôt</label>
+                        <label class="form-label" for="pickup_date" id="dateLabel">Jour de récupération de la marchandise</label>
                         <input type="date" class="form-control" id="pickup_date" name="pickup_date" required min="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($_POST['pickup_date'] ?? ''); ?>">
+                        <small class="text-muted" id="dateHelp">Obligatoire si vous récupérez au dépôt.</small>
                     </div>
                     <div class="row g-2">
                         <div class="col-12 col-sm-6">
@@ -208,25 +220,39 @@ render_public_chrome_start('Réserver une commande — Pharmacie Blessing');
                         </div>
                     </div>
                     <div class="mb-3 mt-2">
-                        <label class="form-label" for="phone">Téléphone</label>
+                        <label class="form-label" for="phone">Téléphone (joignable)</label>
                         <input type="tel" class="form-control" id="phone" name="phone" required maxlength="30" value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>">
                     </div>
                     <div class="mb-3">
                         <label class="form-label" for="email">E-mail (facultatif)</label>
                         <input type="email" class="form-control" id="email" name="email" maxlength="150" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
                     </div>
-                    <div class="mb-3">
-                        <label class="form-label" for="address" id="addressLabel">Adresse (facultatif)</label>
-                        <input type="text" class="form-control" id="address" name="address" maxlength="255" value="<?php echo htmlspecialchars($_POST['address'] ?? ''); ?>">
-                    </div>
-                    <div id="geoBlock" class="mb-3 d-none">
-                        <input type="hidden" name="geo_lat" id="geo_lat" value="<?php echo htmlspecialchars($_POST['geo_lat'] ?? ''); ?>">
-                        <input type="hidden" name="geo_lng" id="geo_lng" value="<?php echo htmlspecialchars($_POST['geo_lng'] ?? ''); ?>">
-                        <button type="button" class="btn btn-outline-primary w-100" id="btnGeo">Partager ma position</button>
-                        <p class="reserve-note mb-0" id="geoStatus">La géolocalisation aide le livreur à vous localiser.</p>
+                    <div id="deliveryFields" class="d-none">
+                        <div class="mb-3">
+                            <label class="form-label" for="location_commune">Commune / quartier</label>
+                            <input type="text" class="form-control" id="location_commune" name="location_commune" maxlength="120" value="<?php echo htmlspecialchars($_POST['location_commune'] ?? ''); ?>" placeholder="Ex: Gombe, Lemba…">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="location_avenue">Avenue / rue / numéro</label>
+                            <input type="text" class="form-control" id="location_avenue" name="location_avenue" maxlength="180" value="<?php echo htmlspecialchars($_POST['location_avenue'] ?? ''); ?>" placeholder="Ex: Av. de la Liberte n°12">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="location_landmark">Point de repère</label>
+                            <input type="text" class="form-control" id="location_landmark" name="location_landmark" maxlength="180" value="<?php echo htmlspecialchars($_POST['location_landmark'] ?? ''); ?>" placeholder="Ex: près de l’église, après le marché…">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label" for="address">Complément d’adresse (facultatif)</label>
+                            <input type="text" class="form-control" id="address" name="address" maxlength="255" value="<?php echo htmlspecialchars($_POST['address'] ?? ''); ?>">
+                        </div>
+                        <div class="mb-3">
+                            <input type="hidden" name="geo_lat" id="geo_lat" value="<?php echo htmlspecialchars($_POST['geo_lat'] ?? ''); ?>">
+                            <input type="hidden" name="geo_lng" id="geo_lng" value="<?php echo htmlspecialchars($_POST['geo_lng'] ?? ''); ?>">
+                            <button type="button" class="btn btn-outline-primary w-100" id="btnGeo">Partager ma position GPS</button>
+                            <p class="reserve-note mb-0" id="geoStatus">Obligatoire pour localiser la livraison.</p>
+                        </div>
                     </div>
                     <button type="submit" class="btn-hero btn-hero-primary w-100" id="btnReserve" <?php echo empty($products) ? 'disabled' : ''; ?>>Valider la réservation</button>
-                    <p class="reserve-note">La facture générée est une pro forma. Le stock n’est pas retiré tant que le paiement n’est pas validé au dépôt.</p>
+                    <p class="reserve-note">Pro forma uniquement. Paiement au dépôt : facturier / caisse, puis livreur.</p>
                 </div>
             </div>
         </form>
@@ -310,10 +336,14 @@ render_public_chrome_start('Réserver une commande — Pharmacie Blessing');
 
     function syncFulfillmentUI() {
         var delivery = document.getElementById('modeLivraison').checked;
-        document.getElementById('dateLabel').textContent = delivery ? 'Date de livraison souhaitée' : 'Date de retrait au dépôt';
-        document.getElementById('addressLabel').textContent = delivery ? 'Adresse de livraison' : 'Adresse (facultatif)';
-        document.getElementById('address').required = delivery;
-        document.getElementById('geoBlock').classList.toggle('d-none', !delivery);
+        document.getElementById('dateLabel').textContent = delivery ? 'Jour de livraison souhaité' : 'Jour de récupération de la marchandise';
+        document.getElementById('dateHelp').textContent = delivery
+            ? 'Indiquez le jour où le livreur doit venir.'
+            : 'Obligatoire : jour où vous récupérez votre marchandise au dépôt.';
+        document.getElementById('deliveryFields').classList.toggle('d-none', !delivery);
+        ['location_commune', 'location_avenue', 'location_landmark'].forEach(function (id) {
+            document.getElementById(id).required = delivery;
+        });
     }
     document.getElementById('modeRetrait').addEventListener('change', syncFulfillmentUI);
     document.getElementById('modeLivraison').addEventListener('change', syncFulfillmentUI);
@@ -329,9 +359,9 @@ render_public_chrome_start('Réserver une commande — Pharmacie Blessing');
         navigator.geolocation.getCurrentPosition(function (pos) {
             document.getElementById('geo_lat').value = pos.coords.latitude.toFixed(7);
             document.getElementById('geo_lng').value = pos.coords.longitude.toFixed(7);
-            status.textContent = 'Position enregistrée (' + pos.coords.latitude.toFixed(5) + ', ' + pos.coords.longitude.toFixed(5) + ').';
+            status.textContent = 'Position GPS enregistrée.';
         }, function () {
-            status.textContent = 'Impossible d’obtenir la position. Autorisez l’accès à la localisation.';
+            status.textContent = 'Impossible d’obtenir la position. Autorisez la localisation.';
         }, { enableHighAccuracy: true, timeout: 15000 });
     });
 
@@ -341,10 +371,20 @@ render_public_chrome_start('Réserver une commande — Pharmacie Blessing');
             alert('Ajoutez au moins un produit au panier.');
             return;
         }
+        if (!document.getElementById('pickup_date').value) {
+            event.preventDefault();
+            alert('Indiquez le jour de récupération ou de livraison.');
+            return;
+        }
         if (document.getElementById('modeLivraison').checked) {
+            if (!document.getElementById('location_commune').value || !document.getElementById('location_avenue').value || !document.getElementById('location_landmark').value) {
+                event.preventDefault();
+                alert('Renseignez commune/quartier, avenue/rue et point de repère.');
+                return;
+            }
             if (!document.getElementById('geo_lat').value || !document.getElementById('geo_lng').value) {
                 event.preventDefault();
-                alert('Partagez votre position pour la livraison à domicile.');
+                alert('Partagez votre position GPS pour la livraison à domicile.');
             }
         }
     });

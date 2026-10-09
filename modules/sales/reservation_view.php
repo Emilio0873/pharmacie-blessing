@@ -52,6 +52,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['validate_payment'])) 
                 'fulfillment_type' => $reservation['fulfillment_type'] ?? 'retrait_depot',
                 'geo_lat' => $reservation['geo_lat'] ?? null,
                 'geo_lng' => $reservation['geo_lng'] ?? null,
+                'pickup_date' => $reservation['pickup_date'] ?? null,
+                'location_commune' => $reservation['location_commune'] ?? null,
+                'location_avenue' => $reservation['location_avenue'] ?? null,
+                'location_landmark' => $reservation['location_landmark'] ?? null,
                 'stock_note' => 'Réservation ' . $reservation['reference'],
             ]);
 
@@ -115,12 +119,24 @@ require_once '../../includes/header.php';
                 <?php endif; ?>
                 <p class="mb-1">
                     Mode :
-                    <strong><?php echo $isDelivery ? 'Livraison à domicile' : 'Retrait au dépôt'; ?></strong>
+                    <strong><?php echo $isDelivery ? 'Livraison à domicile' : 'À récupérer au dépôt'; ?></strong>
                 </p>
-                <p class="mb-3">
-                    Date prévue :
+                <p class="mb-1">
+                    <?php echo $isDelivery ? 'Jour de livraison' : 'Jour de récupération'; ?> :
                     <strong><?php echo date('d/m/Y', strtotime($reservation['pickup_date'])); ?></strong>
                 </p>
+                <?php if ($isDelivery): ?>
+                    <p class="mb-3 small">
+                        <?php echo htmlspecialchars(build_location_address(
+                            $reservation['location_commune'] ?? '',
+                            $reservation['location_avenue'] ?? '',
+                            $reservation['location_landmark'] ?? '',
+                            ''
+                        )); ?>
+                    </p>
+                <?php else: ?>
+                    <div class="mb-3"></div>
+                <?php endif; ?>
                 <?php if ($map): ?>
                     <a class="btn btn-outline-primary btn-sm mb-3" href="<?php echo htmlspecialchars($map); ?>" target="_blank" rel="noopener">Voir sur la carte</a>
                 <?php endif; ?>

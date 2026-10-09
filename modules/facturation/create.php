@@ -20,17 +20,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $clientName = trim(strip_tags($_POST['client_name'] ?? ''));
         $phone = trim(strip_tags($_POST['phone'] ?? ''));
         $email = trim(strip_tags($_POST['email'] ?? ''));
-        $address = trim(strip_tags($_POST['address'] ?? ''));
+        $commune = trim(strip_tags($_POST['location_commune'] ?? ''));
+        $avenue = trim(strip_tags($_POST['location_avenue'] ?? ''));
+        $landmark = trim(strip_tags($_POST['location_landmark'] ?? ''));
+        $addressExtra = trim(strip_tags($_POST['address'] ?? ''));
         $pickup = $_POST['pickup_date'] ?? '';
         $fulfillment = ($_POST['fulfillment_type'] ?? 'retrait_depot') === 'livraison_domicile' ? 'livraison_domicile' : 'retrait_depot';
         $geoLat = trim($_POST['geo_lat'] ?? '');
         $geoLng = trim($_POST['geo_lng'] ?? '');
         $cart = json_decode($_POST['cart_json'] ?? '[]', true);
+        $address = $fulfillment === 'livraison_domicile'
+            ? build_location_address($commune, $avenue, $landmark, $addressExtra)
+            : $addressExtra;
 
         if ($clientName === '' || strlen(reservation_phone_key($phone)) < 8) {
             $error = 'Indiquez le nom du client et un téléphone valide.';
-        } elseif ($fulfillment === 'livraison_domicile' && $address === '') {
-            $error = 'Adresse obligatoire pour la livraison à domicile.';
+        } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $pickup) || $pickup < date('Y-m-d')) {
+            $error = $fulfillment === 'livraison_domicile'
+                ? 'Indiquez le jour de livraison.'
+                : 'Indiquez le jour de récupération de la marchandise.';
+        } elseif ($fulfillment === 'livraison_domicile' && ($commune === '' || $avenue === '' || $landmark === '')) {
+            $error = 'Pour la livraison : commune/quartier, avenue/rue et point de repère sont obligatoires.';
         } elseif ($fulfillment === 'livraison_domicile' && (!is_numeric($geoLat) || !is_numeric($geoLng))) {
             $error = 'Géolocalisez le client pour la livraison à domicile.';
         } elseif (!is_array($cart) || !$cart) {
@@ -63,8 +73,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
                 $tmp = 'TMP-' . bin2hex(random_bytes(6));
                 $pdo->prepare("INSERT INTO counter_orders
-                    (reference, client_name, phone, email, address, fulfillment_type, geo_lat, geo_lng, pickup_date, status, subtotal, created_by)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'en_caisse', ?, ?)")
+                    (reference, client_name, phone, email, address, fulfillment_type, geo_lat, geo_lng, pickup_date, status, subtotal, created_by, location_commune, location_avenue, location_landmark)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 'en_caisse', ?, ?, ?, ?, ?)")
                     ->execute([
                         $tmp,
                         $clientName,
@@ -74,9 +84,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $fulfillment,
                         $fulfillment === 'livraison_domicile' ? (float)$geoLat : null,
                         $fulfillment === 'livraison_domicile' ? (float)$geoLng : null,
-                        preg_match('/^\d{4}-\d{2}-\d{2}$/', $pickup) ? $pickup : null,
+                        $pickup,
                         $subtotal,
                         (int)$_SESSION['user_id'],
+                        $fulfillment === 'livraison_domicile' ? $commune : null,
+                        $fulfillment === 'livraison_domicile' ? $avenue : null,
+                        $fulfillment === 'livraison_domicile' ? $landmark : null,
                     ]);
                 $orderId = (int)$pdo->lastInsertId();
                 $ref = format_counter_order_number($orderId);
@@ -106,7 +119,7 @@ require_once '../../includes/header.php';
 <div class="mb-4">
     <a href="index.php" class="btn btn-light btn-sm mb-3">Retour</a>
     <h3 class="fw-bold">Nouvelle commande (facturier)</h3>
-    <p class="text-muted">Saisissez les besoins du client, puis transférez directement à la caisse.</p>
+    <p class="text-muted">Procédure physique : client → facturier (cette page) → transfert caisse → paiement → livreur (livraison ou à retirer).</p>
 </div>
 
 <?php if ($error): ?><div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div><?php endif; ?>
@@ -167,7 +180,7 @@ require_once '../../includes/header.php';
                     <label class="form-label d-block">Mode</label>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="fulfillment_type" id="cRetrait" value="retrait_depot" checked>
-                        <label class="form-check-label" for="cRetrait">Retrait</label>
+                        <label class="form-check-label" for="cRetrait">À récupérer</label>
                     </div>
                     <div class="form-check form-check-inline">
                         <input class="form-check-input" type="radio" name="fulfillment_type" id="cLivraison" value="livraison_domicile">
@@ -175,18 +188,32 @@ require_once '../../includes/header.php';
                     </div>
                 </div>
                 <div class="mb-2">
-                    <label class="form-label" for="pickup_date">Date souhaitée</label>
-                    <input type="date" class="form-control" name="pickup_date" min="<?php echo date('Y-m-d'); ?>">
+                    <label class="form-label" for="pickup_date" id="dateLabel">Jour de récupération</label>
+                    <input type="date" class="form-control" name="pickup_date" id="pickup_date" required min="<?php echo date('Y-m-d'); ?>">
                 </div>
-                <div class="mb-2">
-                    <label class="form-label">Adresse</label>
-                    <input class="form-control" name="address" id="address">
+                <div id="deliveryFields" class="d-none">
+                    <div class="mb-2">
+                        <label class="form-label">Commune / quartier</label>
+                        <input class="form-control" name="location_commune" id="location_commune">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Avenue / rue / n°</label>
+                        <input class="form-control" name="location_avenue" id="location_avenue">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Point de repère</label>
+                        <input class="form-control" name="location_landmark" id="location_landmark">
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">Complément</label>
+                        <input class="form-control" name="address" id="address">
+                    </div>
+                    <div class="mb-3">
+                        <button type="button" class="btn btn-outline-primary w-100" id="btnGeo">Géolocaliser le client</button>
+                        <small class="text-muted" id="geoStatus">GPS obligatoire pour la livraison.</small>
+                    </div>
                 </div>
-                <div id="geoBlock" class="mb-3 d-none">
-                    <button type="button" class="btn btn-outline-primary w-100" id="btnGeo">Géolocaliser le client</button>
-                    <small class="text-muted" id="geoStatus">Nécessaire pour la livraison à domicile.</small>
-                </div>
-                <button class="btn btn-primary w-100 fw-bold" type="submit">Transférer à la caisse</button>
+                <button class="btn btn-primary w-100 fw-bold" type="submit">Transférer à la caisse (paiement)</button>
             </div>
         </div>
     </div>
@@ -224,11 +251,13 @@ require_once '../../includes/header.php';
     });
     function sync(){
         var d=document.getElementById('cLivraison').checked;
-        document.getElementById('geoBlock').classList.toggle('d-none',!d);
-        document.getElementById('address').required=d;
+        document.getElementById('deliveryFields').classList.toggle('d-none',!d);
+        document.getElementById('dateLabel').textContent=d?'Jour de livraison':'Jour de récupération';
+        ['location_commune','location_avenue','location_landmark'].forEach(function(id){document.getElementById(id).required=d;});
     }
     document.getElementById('cRetrait').addEventListener('change',sync);
     document.getElementById('cLivraison').addEventListener('change',sync);
+    sync();
     document.getElementById('btnGeo').addEventListener('click',function(){
         var s=document.getElementById('geoStatus');
         if(!navigator.geolocation){s.textContent='Géolocalisation indisponible.';return;}
@@ -241,8 +270,14 @@ require_once '../../includes/header.php';
     });
     document.getElementById('counterForm').addEventListener('submit',function(e){
         if(!cart.length){e.preventDefault();alert('Ajoutez des produits.');return;}
-        if(document.getElementById('cLivraison').checked && (!document.getElementById('geo_lat').value||!document.getElementById('geo_lng').value)){
-            e.preventDefault();alert('Géolocalisez le client.');
+        if(!document.getElementById('pickup_date').value){e.preventDefault();alert('Indiquez le jour de récupération ou de livraison.');return;}
+        if(document.getElementById('cLivraison').checked){
+            if(!document.getElementById('location_commune').value||!document.getElementById('location_avenue').value||!document.getElementById('location_landmark').value){
+                e.preventDefault();alert('Complétez commune, avenue et point de repère.');return;
+            }
+            if(!document.getElementById('geo_lat').value||!document.getElementById('geo_lng').value){
+                e.preventDefault();alert('Géolocalisez le client.');
+            }
         }
     });
 })();

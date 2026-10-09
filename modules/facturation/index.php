@@ -22,7 +22,7 @@ require_once '../../includes/header.php';
 <div class="row mb-4 align-items-center">
     <div class="col-md-8">
         <h3 class="fw-bold mb-1">Commandes au comptoir</h3>
-        <p class="text-muted mb-0">Enregistrez les besoins du client, puis transférez à la caisse. Le livreur n’intervient qu’après paiement.</p>
+        <p class="text-muted mb-0">Schéma physique : facturier (commande) → caisse (paiement) → livreur (livraison ou à retirer).</p>
     </div>
     <div class="col-md-4 text-md-end">
         <a href="create.php" class="btn btn-primary fw-bold"><i class="fas fa-plus me-1"></i> Nouvelle commande</a>

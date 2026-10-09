@@ -35,6 +35,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_order_id']) && cs
             'fulfillment_type' => $order['fulfillment_type'] ?? 'retrait_depot',
             'geo_lat' => $order['geo_lat'] ?? null,
             'geo_lng' => $order['geo_lng'] ?? null,
+            'pickup_date' => $order['pickup_date'] ?? null,
+            'location_commune' => $order['location_commune'] ?? null,
+            'location_avenue' => $order['location_avenue'] ?? null,
+            'location_landmark' => $order['location_landmark'] ?? null,
             'stock_note' => 'Commande ' . $order['reference'],
         ]);
         $upd = $pdo->prepare("UPDATE counter_orders SET status = 'payee', sale_id = ? WHERE id = ? AND status = 'en_caisse'");
@@ -357,7 +361,7 @@ require_once '../../includes/header.php';
     <div class="card border-0 shadow-sm">
         <div class="card-header border-0 py-3">
             <h5 class="fw-bold mb-0">Commandes à encaisser (envoyées par le facturier)</h5>
-            <p class="text-muted small mb-0">Après validation, le stock est sorti et la commande part chez le livreur (livraison ou retrait).</p>
+            <p class="text-muted small mb-0">Procédure : facturier → caisse (vous validez le paiement) → livreur (livraison ou marchandise à retirer). Le stock sort uniquement après paiement.</p>
         </div>
         <div class="card-body p-0">
             <div class="table-responsive">

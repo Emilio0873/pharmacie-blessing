@@ -434,13 +434,17 @@ function create_paid_sale_from_lines(PDO $pdo, array $lines, array $meta) {
     $fulfillment = ($meta['fulfillment_type'] ?? 'retrait_depot') === 'livraison_domicile' ? 'livraison_domicile' : 'retrait_depot';
     $geoLat = isset($meta['geo_lat']) && $meta['geo_lat'] !== '' && $meta['geo_lat'] !== null ? (float)$meta['geo_lat'] : null;
     $geoLng = isset($meta['geo_lng']) && $meta['geo_lng'] !== '' && $meta['geo_lng'] !== null ? (float)$meta['geo_lng'] : null;
+    $pickupDate = !empty($meta['pickup_date']) ? $meta['pickup_date'] : null;
+    $commune = $meta['location_commune'] ?? null;
+    $avenue = $meta['location_avenue'] ?? null;
+    $landmark = $meta['location_landmark'] ?? null;
     $deliveryNote = $meta['stock_note'] ?? 'Vente';
-    $initialDelivery = $fulfillment === 'livraison_domicile' ? 'a_preparer' : 'a_preparer';
+    $initialDelivery = 'a_preparer';
 
     $pdo->prepare("INSERT INTO sales
-        (client_id, user_id, total_amount, discount, final_amount, delivery_status, fulfillment_type, geo_lat, geo_lng)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
-        ->execute([$clientId, $userId, $subtotal, $discount, $final, $initialDelivery, $fulfillment, $geoLat, $geoLng]);
+        (client_id, user_id, total_amount, discount, final_amount, delivery_status, fulfillment_type, geo_lat, geo_lng, pickup_date, location_commune, location_avenue, location_landmark)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        ->execute([$clientId, $userId, $subtotal, $discount, $final, $initialDelivery, $fulfillment, $geoLat, $geoLng, $pickupDate, $commune, $avenue, $landmark]);
     $saleId = (int)$pdo->lastInsertId();
 
     foreach ($lines as $item) {
@@ -502,5 +506,15 @@ function maps_url($lat, $lng) {
         return null;
     }
     return 'https://www.google.com/maps?q=' . rawurlencode((float)$lat . ',' . (float)$lng);
+}
+
+function build_location_address($commune, $avenue, $landmark, $extra = '') {
+    $parts = array_filter([
+        trim((string)$commune),
+        trim((string)$avenue),
+        trim((string)$landmark) !== '' ? 'Repère: ' . trim((string)$landmark) : '',
+        trim((string)$extra),
+    ]);
+    return implode(' — ', $parts);
 }
 ?>
