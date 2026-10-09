@@ -241,7 +241,7 @@ for ($i = 6; $i >= 0; $i--) {
                                 </td>
                             </tr>
                         <?php endforeach; else: ?>
-                            <tr><td colspan="4" class="text-center py-4 text-muted">Aucu produit en alerte.</td></tr>
+                            <tr><td colspan="4" class="text-center py-4 text-muted">Aucun produit en alerte.</td></tr>
                         <?php endif; ?>
                     </tbody>
                 </table>

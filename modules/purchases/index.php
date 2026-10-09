@@ -42,8 +42,11 @@ $message = '';
 $error = '';
 
 // Handle Delete Purchase
-if (isset($_GET['delete'])) {
-    $id = (int)$_GET['delete'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    if (!csrf_valid()) {
+        $error = "Action refusée. Rechargez la page puis réessayez.";
+    } else {
+    $id = (int)$_POST['delete_id'];
     try {
         $pdo->beginTransaction();
 
@@ -53,7 +56,12 @@ if (isset($_GET['delete'])) {
         $items = $stmt_items->fetchAll();
 
         foreach ($items as $item) {
-            // 2. Subtract qty from products
+            $stmt_check = $pdo->prepare("SELECT name, qty FROM products WHERE id = ? FOR UPDATE");
+            $stmt_check->execute([$item['product_id']]);
+            $product = $stmt_check->fetch();
+            if ($product && (int)$product['qty'] < (int)$item['qty']) {
+                throw new Exception("Stock insuffisant pour annuler cet achat (« {$product['name']} »).");
+            }
             $stmt_update = $pdo->prepare("UPDATE products SET qty = qty - ? WHERE id = ?");
             $stmt_update->execute([$item['qty'], $item['product_id']]);
         }
@@ -80,7 +88,10 @@ if (isset($_GET['delete'])) {
         $purchases = $stmt->fetchAll();
     } catch (Exception $e) {
         $pdo->rollBack();
-        $error = "Erreur lors de la suppression : " . $e->getMessage();
+        $error = $e->getMessage() !== '' && !str_contains($e->getMessage(), 'SQLSTATE')
+            ? $e->getMessage()
+            : db_user_message($e, "Impossible de supprimer cet achat.");
+    }
     }
 }
 
@@ -190,9 +201,7 @@ require_once '../../includes/header.php';
                                         <button class="btn btn-sm btn-light text-info" onclick="viewPurchase(<?php echo $p['id']; ?>)" title="Détails">
                                             <i class="fas fa-eye"></i>
                                         </button>
-                                        <a href="?delete=<?php echo $p['id']; ?>" class="btn btn-sm btn-light text-danger ms-1" onclick="return confirm('Attention: Cela va supprimer l\'achat et RETIRER les quantités du stock. Confirmer ?')" title="Supprimer">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
+                                        <?php echo csrf_delete_form($p['id'], 'Attention: cela va supprimer l\'achat et retirer les quantités du stock. Confirmer ?', 'btn btn-sm btn-light text-danger ms-1'); ?>
                                     </div>
                                 </td>
                             </tr>

@@ -71,6 +71,50 @@ function sanitize($data) {
     return htmlspecialchars(strip_tags(trim($data)));
 }
 
+function csrf_token() {
+    if (empty($_SESSION['csrf_token'])) {
+        $_SESSION['csrf_token'] = bin2hex(random_bytes(16));
+    }
+    return $_SESSION['csrf_token'];
+}
+
+function csrf_valid() {
+    $sent = $_POST['csrf_token'] ?? '';
+    $known = $_SESSION['csrf_token'] ?? '';
+    return is_string($sent) && $known !== '' && hash_equals($known, $sent);
+}
+
+function csrf_delete_form($id, $confirm, $buttonClass = 'btn btn-sm btn-light text-danger') {
+    $token = htmlspecialchars(csrf_token(), ENT_QUOTES, 'UTF-8');
+    $message = htmlspecialchars(json_encode($confirm, JSON_UNESCAPED_UNICODE), ENT_QUOTES, 'UTF-8');
+    $class = htmlspecialchars($buttonClass, ENT_QUOTES, 'UTF-8');
+    return '<form method="post" class="d-inline" onsubmit="return confirm(' . $message . ')">'
+        . '<input type="hidden" name="csrf_token" value="' . $token . '">'
+        . '<input type="hidden" name="delete_id" value="' . (int)$id . '">'
+        . '<button type="submit" class="' . $class . '" title="Supprimer"><i class="fas fa-trash"></i></button>'
+        . '</form>';
+}
+
+/**
+ * Turn a database exception into a short message for the user.
+ */
+function db_user_message($e, $duplicate = 'Cette valeur existe déjà.', $missing = 'Un champ obligatoire est manquant.') {
+    $msg = $e instanceof Throwable ? $e->getMessage() : (string)$e;
+    if (str_contains($msg, '1062') || stripos($msg, 'Duplicate') !== false) {
+        return $duplicate;
+    }
+    if (str_contains($msg, '1048') || stripos($msg, 'cannot be null') !== false) {
+        return $missing;
+    }
+    if (str_contains($msg, '1452')) {
+        return 'La valeur liée (catégorie, client ou fournisseur) n\'existe pas.';
+    }
+    if (str_contains($msg, '1451')) {
+        return 'Impossible : cet élément est encore utilisé ailleurs.';
+    }
+    return 'Une erreur est survenue. Vérifiez les champs et réessayez.';
+}
+
 /**
  * Format currency
  */
@@ -90,8 +134,12 @@ function log_activity($pdo, $user_id, $action, $details = null) {
  * Get dynamic notifications
  */
 function get_notifications($pdo) {
-    $stmt = $pdo->query("SELECT * FROM notifications WHERE status = 'unread' ORDER BY created_at DESC LIMIT 5");
-    return $stmt->fetchAll();
+    try {
+        $stmt = $pdo->query("SELECT * FROM notifications WHERE status = 'unread' ORDER BY created_at DESC LIMIT 5");
+        return $stmt->fetchAll();
+    } catch (Throwable $e) {
+        return [];
+    }
 }
 
 /**

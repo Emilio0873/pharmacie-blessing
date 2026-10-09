@@ -330,6 +330,28 @@ VALUES
 ON DUPLICATE KEY UPDATE
   permissions = VALUES(permissions);
 
+INSERT INTO categories (name, description)
+SELECT 'Antalgiques', 'Douleurs et fievre' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Antalgiques');
+INSERT INTO categories (name, description)
+SELECT 'Antibiotiques', 'Infections bacteriennes' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Antibiotiques');
+INSERT INTO categories (name, description)
+SELECT 'Antihypertenseurs', 'Tension arterielle' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Antihypertenseurs');
+INSERT INTO categories (name, description)
+SELECT 'Antipaludeens', 'Traitement et prevention du paludisme' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Antipaludeens');
+INSERT INTO categories (name, description)
+SELECT 'Vitamines', 'Complements et vitamines' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Vitamines');
+INSERT INTO categories (name, description)
+SELECT 'Soins et pansements', 'Hygiene, pansements et premiers soins' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Soins et pansements');
+INSERT INTO categories (name, description)
+SELECT 'Divers', 'Autres produits' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Divers');
+
 -- Compte Super Admin par defaut (a changer apres la premiere connexion)
 -- Identifiant : admin  |  Mot de passe : admin123
 INSERT INTO users (full_name, username, password, role_id, status)

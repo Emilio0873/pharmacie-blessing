@@ -6,13 +6,17 @@ require_once '../../includes/functions.php';
 if (!is_logged_in()) redirect('../../index.php');
 authorize(['Super Admin', 'Admin', 'Magasinier']);
 
-if (isset($_GET['delete'])) {
-    $id = (int)$_GET['delete'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    if (!csrf_valid()) {
+        $error = "Action refusée. Rechargez la page puis réessayez.";
+    } else {
+    $id = (int)$_POST['delete_id'];
     try {
         $pdo->prepare("DELETE FROM suppliers WHERE id = ?")->execute([$id]);
         $success = "Fournisseur supprimé avec succès.";
     } catch (Exception $e) {
         $error = "Erreur lors de la suppression (ce fournisseur est lié à des achats).";
+    }
     }
 }
 
@@ -106,7 +110,7 @@ require_once '../../includes/header.php';
                                 <td class="fw-bold text-danger"><?php echo format_currency($s['total_purchases_amount'] ?? 0); ?></td>
                                 <td class="text-end pe-4">
                                     <a href="edit.php?id=<?php echo $s['id']; ?>" class="btn btn-sm btn-light text-primary"><i class="fas fa-edit"></i></a>
-                                    <a href="?delete=<?php echo $s['id']; ?>" class="btn btn-sm btn-light text-danger" onclick="return confirm('Supprimer ce fournisseur ?');"><i class="fas fa-trash"></i></a>
+                                    <?php echo csrf_delete_form($s['id'], 'Supprimer ce fournisseur ?'); ?>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

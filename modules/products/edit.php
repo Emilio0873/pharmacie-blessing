@@ -25,15 +25,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $code = sanitize($_POST['code']);
     $name = sanitize($_POST['name']);
     $description = sanitize($_POST['description']);
-    $category_id = (int)$_POST['category_id'];
+    $category_id = !empty($_POST['category_id']) ? (int)$_POST['category_id'] : 0;
     $brand = sanitize($_POST['brand']);
     $lot_number = sanitize($_POST['lot_number'] ?? '');
     $buy_price = (float)$_POST['buy_price'];
     $sell_price = (float)$_POST['sell_price'];
     $qty = (int)$_POST['qty'];
     $alert_threshold = (int)$_POST['alert_threshold'];
-    $mfg_date = $_POST['mfg_date'];
-    $exp_date = $_POST['exp_date'];
+    $mfg_date = !empty($_POST['mfg_date']) ? $_POST['mfg_date'] : null;
+    $exp_date = !empty($_POST['exp_date']) ? $_POST['exp_date'] : null;
 
     // Handle Image Upload
     $image_name = $product['image']; // Keep old image by default
@@ -48,7 +48,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    if (!empty($code) && !empty($name)) {
+    if (empty($code) || empty($name)) {
+        $error = "Veuillez remplir les champs obligatoires (Code et Nom).";
+    } elseif ($category_id <= 0) {
+        $error = "Choisissez une catégorie.";
+    } else {
         try {
             $stmt = $pdo->prepare("UPDATE products SET code = ?, name = ?, description = ?, category_id = ?, brand = ?, lot_number = ?, buy_price = ?, sell_price = ?, qty = ?, alert_threshold = ?, image = ?, mfg_date = ?, exp_date = ? WHERE id = ?");
             $stmt->execute([$code, $name, $description, $category_id, $brand, $lot_number ?: null, $buy_price, $sell_price, $qty, $alert_threshold, $image_name, $mfg_date, $exp_date, $id]);
@@ -61,10 +65,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $stmt->execute([$id]);
             $product = $stmt->fetch();
         } catch (Exception $e) {
-            $error = "Erreur lors de la mise à jour : " . $e->getMessage();
+            $error = db_user_message($e, "Ce code produit existe déjà.", "La catégorie est obligatoire.");
         }
-    } else {
-        $error = "Veuillez remplir les champs obligatoires (Code et Nom).";
     }
 }
 
@@ -119,8 +121,8 @@ require_once '../../includes/header.php';
                         <textarea class="form-control" name="description" rows="3" placeholder="Détails du produit..."><?php echo htmlspecialchars($product['description']); ?></textarea>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-600">Catégorie</label>
-                        <select class="form-select" name="category_id">
+                        <label class="form-label fw-600">Catégorie *</label>
+                        <select class="form-select" name="category_id" required>
                             <option value="">Sélectionner une catégorie</option>
                             <?php foreach ($categories as $cat): ?>
                                 <option value="<?php echo $cat['id']; ?>" <?php echo $cat['id'] == $product['category_id'] ? 'selected' : ''; ?>>

@@ -33,7 +33,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         move_uploaded_file($_FILES['image']['tmp_name'], "../../uploads/products/" . $image_name);
     }
 
-    if (!empty($code) && !empty($name)) {
+    if (empty($code) || empty($name)) {
+        $error = "Veuillez remplir les champs obligatoires (Code et Nom).";
+    } elseif (empty($category_id)) {
+        $error = "Choisissez une catégorie. Si la liste est vide, créez-en une d'abord.";
+    } else {
         try {
             $stmt = $pdo->prepare("INSERT INTO products (code, name, description, category_id, brand, lot_number, buy_price, sell_price, qty, alert_threshold, image, mfg_date, exp_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)");
             $stmt->execute([$code, $name, $description, $category_id, $brand, $lot_number ?: null, $buy_price, $sell_price, $qty, $alert_threshold, $image_name, $mfg_date, $exp_date]);
@@ -49,10 +53,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             log_activity($pdo, $_SESSION['user_id'], 'Ajout Produit', $name . ($lot_number ? " (Lot: $lot_number)" : ''));
             $success = "Produit ajouté avec succès.";
         } catch (Exception $e) {
-            $error = "Erreur lors de l'ajout : " . $e->getMessage();
+            $error = db_user_message($e, "Ce code produit existe déjà.", "La catégorie est obligatoire.");
         }
-    } else {
-        $error = "Veuillez remplir les champs obligatoires (Code et Nom).";
     }
 }
 
@@ -76,7 +78,12 @@ require_once '../../includes/header.php';
     <div class="alert alert-success mt-3"><?php echo $success; ?></div>
 <?php endif; ?>
 <?php if ($error): ?>
-    <div class="alert alert-danger mt-3"><?php echo $error; ?></div>
+    <div class="alert alert-danger mt-3"><?php echo htmlspecialchars($error); ?></div>
+<?php endif; ?>
+<?php if (empty($categories)): ?>
+    <div class="alert alert-warning mt-3">
+        Aucune catégorie. <a href="../categories/index.php">Créez-en une</a> avant d'enregistrer un produit.
+    </div>
 <?php endif; ?>
 
 <div class="card shadow-sm border-0 p-4">
@@ -101,8 +108,8 @@ require_once '../../includes/header.php';
                         <textarea class="form-control" name="description" rows="3" placeholder="Détails du produit..."></textarea>
                     </div>
                     <div class="col-md-6">
-                        <label class="form-label fw-600">Catégorie</label>
-                        <select class="form-select" name="category_id">
+                        <label class="form-label fw-600">Catégorie *</label>
+                        <select class="form-select" name="category_id" required>
                             <option value="">Sélectionner une catégorie</option>
                             <?php foreach ($categories as $cat): ?>
                                 <option value="<?php echo $cat['id']; ?>"><?php echo $cat['name']; ?></option>

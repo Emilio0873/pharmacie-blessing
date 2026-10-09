@@ -10,8 +10,11 @@ $error = '';
 $success = '';
 
 // Handle delete
-if (isset($_GET['delete'])) {
-    $del_id = (int)$_GET['delete'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    if (!csrf_valid()) {
+        $error = "Action refusée. Rechargez la page puis réessayez.";
+    } else {
+    $del_id = (int)$_POST['delete_id'];
     if ($del_id == $_SESSION['user_id']) {
         $error = "Vous ne pouvez pas supprimer votre propre compte.";
     } else {
@@ -22,6 +25,7 @@ if (isset($_GET['delete'])) {
         } catch (Exception $e) {
             $error = "Erreur lors de la suppression. Cet utilisateur a peut-être des données liées.";
         }
+    }
     }
 }
 
@@ -163,10 +167,7 @@ $admins_u  = count(array_filter($users, fn($u) => $u['role_name'] === 'Super Adm
                         <td class="text-end pe-4">
                             <a href="edit.php?id=<?php echo $u['id']; ?>" class="btn btn-sm btn-light text-primary" title="Modifier"><i class="fas fa-edit"></i></a>
                             <?php if ($u['id'] != $_SESSION['user_id']): ?>
-                            <a href="?delete=<?php echo $u['id']; ?>" class="btn btn-sm btn-light text-danger ms-1"
-                               onclick="return confirm('Supprimer cet utilisateur ? Cette action est irréversible.');" title="Supprimer">
-                                <i class="fas fa-trash"></i>
-                            </a>
+                            <?php echo csrf_delete_form($u['id'], 'Supprimer cet utilisateur ? Cette action est irréversible.', 'btn btn-sm btn-light text-danger ms-1'); ?>
                             <?php endif; ?>
                         </td>
                     </tr>

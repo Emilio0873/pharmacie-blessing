@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $success = "L'entrée de stock a été enregistrée avec succès.";
         } catch (Exception $e) {
             $pdo->rollBack();
-            $error = "Erreur lors de l'enregistrement : " . $e->getMessage();
+            $error = db_user_message($e, "Impossible d'enregistrer cette entrée.");
         }
     } else {
         $error = "Veuillez sélectionner un produit et entrer une quantité valide.";

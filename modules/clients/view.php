@@ -358,7 +358,7 @@ require_once '../../includes/header.php';
                         <tr class="purchase-row">
                             <td class="ps-4"><span class="sale-num">#<?php echo str_pad($s['id'], 5, '0', STR_PAD_LEFT); ?></span></td>
                             <td><small><?php echo date('d/m/Y H:i', strtotime($s['sale_date'])); ?></small></td>
-                            <td class="sale-amt"><?php echo format_currency($s['total_amount']); ?></td>
+                            <td class="sale-amt"><?php echo format_currency($s['final_amount']); ?></td>
                             <td class="text-danger small"><?php echo $s['discount'] > 0 ? '-'.format_currency($s['discount']) : '—'; ?></td>
                             <td><small class="text-muted"><i class="fas fa-user-tie me-1"></i><?php echo htmlspecialchars($s['user_name'] ?? 'N/D'); ?></small></td>
                             <td class="text-center pe-4">

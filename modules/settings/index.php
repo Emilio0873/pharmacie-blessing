@@ -10,17 +10,43 @@ $error = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     if ($_POST['action'] === 'backup') {
-        // Simple logic for illustration: dump DB
-        // In real life use mysqldump via exec
-        $backup_file = 'backup_' . date('Ymd_His') . '.sql';
-        $command = "c:\\xampp\\mysql\\bin\\mysqldump.exe -u root pharmacie_blessing > ../../backups/$backup_file 2>&1";
-        exec($command, $output, $result);
-        
-        if ($result === 0) {
-            $success = "Sauvegarde réussie. Fichier : $backup_file";
-            log_activity($pdo, $_SESSION['user_id'], 'Sauvegarde BDD', "Fichier: $backup_file");
+        $candidates = [
+            dirname(__DIR__, 4) . DIRECTORY_SEPARATOR . 'mysql' . DIRECTORY_SEPARATOR . 'bin' . DIRECTORY_SEPARATOR . 'mysqldump.exe',
+            'E:\\xampp\\mysql\\bin\\mysqldump.exe',
+            'C:\\xampp\\mysql\\bin\\mysqldump.exe',
+        ];
+        $dump = null;
+        foreach ($candidates as $path) {
+            if (is_file($path)) {
+                $dump = $path;
+                break;
+            }
+        }
+
+        $backupDir = dirname(__DIR__, 2) . DIRECTORY_SEPARATOR . 'backups';
+        if (!$dump) {
+            $error = "mysqldump introuvable. Vérifiez que MySQL est installé avec XAMPP.";
         } else {
-            $error = "Erreur lors de la sauvegarde.";
+            if (!is_dir($backupDir)) {
+                mkdir($backupDir, 0775, true);
+            }
+            $backupName = 'backup_' . date('Ymd_His') . '.sql';
+            $backupPath = $backupDir . DIRECTORY_SEPARATOR . $backupName;
+            $command = escapeshellarg($dump)
+                . ' --host=' . escapeshellarg($host)
+                . ' --port=' . escapeshellarg((string)$port)
+                . ' --user=' . escapeshellarg($user)
+                . ($pass !== '' ? ' --password=' . escapeshellarg($pass) : '')
+                . ' --single-transaction --databases ' . escapeshellarg($db)
+                . ' > ' . escapeshellarg($backupPath) . ' 2>&1';
+            exec($command, $output, $result);
+
+            if ($result === 0 && is_file($backupPath) && filesize($backupPath) > 0) {
+                $success = "Sauvegarde réussie. Fichier : $backupName";
+                log_activity($pdo, $_SESSION['user_id'], 'Sauvegarde BDD', "Fichier: $backupName");
+            } else {
+                $error = "Erreur lors de la sauvegarde.";
+            }
         }
     } elseif ($_POST['action'] === 'update_business') {
         try {

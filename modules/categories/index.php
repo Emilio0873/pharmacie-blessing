@@ -9,37 +9,55 @@ authorize(['Super Admin', 'Admin', 'Magasinier']);
 $message = '';
 $error = '';
 
-// Handle Delete
-if (isset($_GET['delete'])) {
-    $id = (int)$_GET['delete'];
-    try {
-        $stmt = $pdo->prepare("DELETE FROM categories WHERE id = ?");
-        $stmt->execute([$id]);
-        $message = "Catégorie supprimée avec succès.";
-        log_activity($pdo, $_SESSION['user_id'], 'Suppression Catégorie', "ID: $id");
-    } catch (Exception $e) {
-        $error = "Impossible de supprimer cette catégorie car elle est utilisée par des produits.";
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    $id = (int)$_POST['delete_id'];
+    if (!csrf_valid()) {
+        $error = "Action refusée. Rechargez la page puis réessayez.";
+    } else {
+        try {
+            $stmt = $pdo->prepare("DELETE FROM categories WHERE id = ?");
+            $stmt->execute([$id]);
+            $message = "Catégorie supprimée avec succès.";
+            log_activity($pdo, $_SESSION['user_id'], 'Suppression Catégorie', "ID: $id");
+        } catch (Exception $e) {
+            $error = "Impossible de supprimer cette catégorie car elle est utilisée par des produits.";
+        }
     }
-}
-
-// Handle Add/Edit
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = sanitize($_POST['name']);
     $description = sanitize($_POST['description']);
     $id = isset($_POST['id']) ? (int)$_POST['id'] : 0;
 
     if (!empty($name)) {
-        if ($id > 0) {
-            $stmt = $pdo->prepare("UPDATE categories SET name = ?, description = ? WHERE id = ?");
-            $stmt->execute([$name, $description, $id]);
-            $message = "Catégorie mise à jour.";
-            log_activity($pdo, $_SESSION['user_id'], 'Modification Catégorie', $name);
-        } else {
-            $stmt = $pdo->prepare("INSERT INTO categories (name, description) VALUES (?, ?)");
-            $stmt->execute([$name, $description]);
-            $message = "Catégorie ajoutée.";
-            log_activity($pdo, $_SESSION['user_id'], 'Ajout Catégorie', $name);
+        try {
+            if ($id > 0) {
+                $dup = $pdo->prepare("SELECT id FROM categories WHERE name = ? AND id <> ?");
+                $dup->execute([$name, $id]);
+                if ($dup->fetch()) {
+                    $error = "Une catégorie portant ce nom existe déjà.";
+                } else {
+                    $stmt = $pdo->prepare("UPDATE categories SET name = ?, description = ? WHERE id = ?");
+                    $stmt->execute([$name, $description, $id]);
+                    $message = "Catégorie mise à jour.";
+                    log_activity($pdo, $_SESSION['user_id'], 'Modification Catégorie', $name);
+                }
+            } else {
+                $dup = $pdo->prepare("SELECT id FROM categories WHERE name = ?");
+                $dup->execute([$name]);
+                if ($dup->fetch()) {
+                    $error = "La catégorie « " . $name . " » existe déjà. Choisissez-la dans la liste des produits.";
+                } else {
+                    $stmt = $pdo->prepare("INSERT INTO categories (name, description) VALUES (?, ?)");
+                    $stmt->execute([$name, $description]);
+                    $message = "Catégorie ajoutée.";
+                    log_activity($pdo, $_SESSION['user_id'], 'Ajout Catégorie', $name);
+                }
+            }
+        } catch (Exception $e) {
+            $error = db_user_message($e, "Une catégorie portant ce nom existe déjà.");
         }
+    } else {
+        $error = "Le nom de la catégorie est obligatoire.";
     }
 }
 
@@ -156,9 +174,7 @@ require_once '../../includes/header.php';
                                 data-bs-toggle="modal" data-bs-target="#addCategoryModal">
                             <i class="fas fa-edit"></i>
                         </button>
-                        <a href="?delete=<?php echo $cat['id']; ?>" class="btn btn-sm btn-light text-danger ms-1" onclick="return confirm('Supprimer cette catégorie ?')">
-                            <i class="fas fa-trash"></i>
-                        </a>
+                        <?php echo csrf_delete_form($cat['id'], 'Supprimer cette catégorie ?', 'btn btn-sm btn-light text-danger ms-1'); ?>
                     </td>
                 </tr>
                 <?php endforeach; ?>

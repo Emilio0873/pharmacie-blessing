@@ -11,28 +11,33 @@ ensure_product_lot_column($pdo);
 $message = '';
 $error = '';
 
-// Handle Delete
-if (isset($_GET['delete'])) {
-    $id = (int)$_GET['delete'];
-    try {
-        $pdo->beginTransaction();
-        
-        // Delete related records first
-        $pdo->prepare("DELETE FROM stock_movements WHERE product_id = ?")->execute([$id]);
-        $pdo->prepare("DELETE FROM sale_details WHERE product_id = ?")->execute([$id]);
-        $pdo->prepare("DELETE FROM purchase_details WHERE product_id = ?")->execute([$id]);
-        
-        // Delete the product
-        $stmt = $pdo->prepare("DELETE FROM products WHERE id = ?");
-        $stmt->execute([$id]);
-        
-        $pdo->commit();
-        
-        $message = "Produit et tout son historique ont été supprimés avec succès.";
-        log_activity($pdo, $_SESSION['user_id'], 'Suppression Produit (Cascade)', "ID: $id");
-    } catch (Exception $e) {
-        $pdo->rollBack();
-        $error = "Erreur lors de la suppression : " . $e->getMessage();
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    $id = (int)$_POST['delete_id'];
+    if (!csrf_valid()) {
+        $error = "Action refusée. Rechargez la page puis réessayez.";
+    } else {
+        try {
+            $used = $pdo->prepare("SELECT
+                (SELECT COUNT(*) FROM sale_details WHERE product_id = ?) +
+                (SELECT COUNT(*) FROM purchase_details WHERE product_id = ?) +
+                (SELECT COUNT(*) FROM invoice_items WHERE product_id = ?) AS used");
+            $used->execute([$id, $id, $id]);
+            if ((int)$used->fetchColumn() > 0) {
+                $error = "Impossible de supprimer ce produit : il figure dans des ventes ou des achats. Mettez sa quantité à 0 pour le retirer du rayon.";
+            } else {
+                $pdo->beginTransaction();
+                $pdo->prepare("DELETE FROM stock_movements WHERE product_id = ?")->execute([$id]);
+                $pdo->prepare("DELETE FROM products WHERE id = ?")->execute([$id]);
+                $pdo->commit();
+                $message = "Produit supprimé.";
+                log_activity($pdo, $_SESSION['user_id'], 'Suppression Produit', "ID: $id");
+            }
+        } catch (Exception $e) {
+            if ($pdo->inTransaction()) {
+                $pdo->rollBack();
+            }
+            $error = db_user_message($e, "Impossible de supprimer ce produit.", "Impossible de supprimer ce produit.");
+        }
     }
 }
 
@@ -215,9 +220,7 @@ require_once '../../includes/header.php';
                             <a href="edit.php?id=<?php echo $p['id']; ?>" class="btn btn-sm btn-light text-primary" title="Modifier">
                                 <i class="fas fa-edit"></i>
                             </a>
-                            <a href="?delete=<?php echo $p['id']; ?>" class="btn btn-sm btn-light text-danger" onclick="return confirm('Supprimer ce produit ?')" title="Supprimer">
-                                <i class="fas fa-trash"></i>
-                            </a>
+                            <?php echo csrf_delete_form($p['id'], 'Supprimer ce produit ?'); ?>
                         </div>
                     </td>
                 </tr>

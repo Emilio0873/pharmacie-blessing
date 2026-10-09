@@ -6,8 +6,11 @@ require_once '../../includes/functions.php';
 if (!is_logged_in()) redirect('../../index.php');
 authorize(['Super Admin', 'Admin', 'Caissier']);
 
-if (isset($_GET['delete'])) {
-    $id = (int)$_GET['delete'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    if (!csrf_valid()) {
+        $error = "Action refusée. Rechargez la page puis réessayez.";
+    } else {
+    $id = (int)$_POST['delete_id'];
     try {
         // Remove photo file if exists
         $r = $pdo->prepare("SELECT photo FROM clients WHERE id=?"); $r->execute([$id]);
@@ -20,12 +23,13 @@ if (isset($_GET['delete'])) {
     } catch (Exception $e) {
         $error = "Erreur lors de la suppression (client lié à des ventes).";
     }
+    }
 }
 
 $search = isset($_GET['search']) ? sanitize($_GET['search']) : '';
 $query  = "SELECT c.*, 
            (SELECT COUNT(*) FROM sales WHERE client_id = c.id) as total_sales_count,
-           (SELECT SUM(total_amount) FROM sales WHERE client_id = c.id) as total_sales_amount
+           (SELECT SUM(final_amount) FROM sales WHERE client_id = c.id) as total_sales_amount
            FROM clients c WHERE 1=1";
 $params = [];
 
@@ -248,7 +252,7 @@ require_once '../../includes/header.php';
         <div class="card-quick-actions">
             <a href="view.php?id=<?php echo $c['id']; ?>" class="card-quick-btn btn-q-view" title="Voir profil"><i class="fas fa-eye"></i></a>
             <a href="edit.php?id=<?php echo $c['id']; ?>" class="card-quick-btn btn-q-edit" title="Modifier"><i class="fas fa-pen"></i></a>
-            <a href="?delete=<?php echo $c['id']; ?>" class="card-quick-btn btn-q-delete" title="Supprimer" onclick="return confirm('Supprimer ce client ?');"><i class="fas fa-trash"></i></a>
+            <?php echo csrf_delete_form($c['id'], 'Supprimer ce client ?', 'card-quick-btn btn-q-delete'); ?>
         </div>
         <!-- Photo zone (banner) -->
         <div class="card-photo-zone <?php echo $has_photo ? '' : $grad; ?>">

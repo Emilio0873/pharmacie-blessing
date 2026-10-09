@@ -54,8 +54,11 @@ $message = '';
 $error = '';
 
 // Handle Delete Sale
-if (isset($_GET['delete'])) {
-    $id = (int)$_GET['delete'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
+    if (!csrf_valid()) {
+        $error = "Action refusée. Rechargez la page puis réessayez.";
+    } else {
+    $id = (int)$_POST['delete_id'];
     try {
         $pdo->beginTransaction();
 
@@ -104,7 +107,8 @@ if (isset($_GET['delete'])) {
         $sales = $stmt->fetchAll();
     } catch (Exception $e) {
         $pdo->rollBack();
-        $error = "Erreur lors de la suppression : " . $e->getMessage();
+        $error = db_user_message($e, "Impossible de supprimer cette vente.");
+    }
     }
 }
 
@@ -261,9 +265,7 @@ require_once '../../includes/header.php';
                                         <a href="receipt.php?id=<?php echo $sale['id']; ?>" target="_blank" class="btn btn-sm btn-light text-secondary ms-1" title="Ticket de caisse">
                                             <i class="fas fa-receipt"></i>
                                         </a>
-                                        <a href="?delete=<?php echo $sale['id']; ?>" class="btn btn-sm btn-light text-danger ms-1" onclick="return confirm('Attention: Cela va supprimer la vente et RÉINTÉGRER les quantités dans le stock. Confirmer ?')" title="Supprimer">
-                                            <i class="fas fa-trash"></i>
-                                        </a>
+                                        <?php echo csrf_delete_form($sale['id'], 'Attention: cela va supprimer la vente et réintégrer les quantités dans le stock. Confirmer ?', 'btn btn-sm btn-light text-danger ms-1'); ?>
                                     </div>
                                 </td>
                             </tr>

@@ -9,11 +9,16 @@ function bootstrap_schema_if_needed(PDO $pdo): void {
     }
     $done = true;
 
+    $needsImport = false;
     try {
         $pdo->query("SELECT 1 FROM roles LIMIT 1");
-        return; // already initialized
     } catch (Throwable $e) {
-        // continue to import
+        $needsImport = true;
+    }
+
+    if (!$needsImport) {
+        seed_default_categories($pdo);
+        return;
     }
 
     $schemaFile = __DIR__ . '/../scripts/railway_schema.sql';
@@ -44,5 +49,36 @@ function bootstrap_schema_if_needed(PDO $pdo): void {
             continue;
         }
         $pdo->exec($statement);
+    }
+
+    seed_default_categories($pdo);
+}
+
+/**
+ * Pharmacy categories used when the table is still empty.
+ */
+function seed_default_categories(PDO $pdo): void {
+    try {
+        $count = (int)$pdo->query("SELECT COUNT(*) FROM categories")->fetchColumn();
+    } catch (Throwable $e) {
+        return;
+    }
+    if ($count > 0) {
+        return;
+    }
+
+    $categories = [
+        ['Antalgiques', 'Douleurs et fièvre'],
+        ['Antibiotiques', 'Infections bactériennes'],
+        ['Antihypertenseurs', 'Tension artérielle'],
+        ['Antipaludéens', 'Traitement et prévention du paludisme'],
+        ['Vitamines', 'Compléments et vitamines'],
+        ['Soins et pansements', 'Hygiène, pansements et premiers soins'],
+        ['Divers', 'Autres produits'],
+    ];
+
+    $stmt = $pdo->prepare("INSERT INTO categories (name, description) VALUES (?, ?)");
+    foreach ($categories as $category) {
+        $stmt->execute($category);
     }
 }

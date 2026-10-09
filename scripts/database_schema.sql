@@ -347,6 +347,29 @@ WHERE r.name = 'Super Admin'
   AND NOT EXISTS (SELECT 1 FROM users u WHERE u.username = 'admin')
 LIMIT 1;
 
+-- Catégories de départ (uniquement si le nom n'existe pas encore)
+INSERT INTO categories (name, description)
+SELECT 'Antalgiques', 'Douleurs et fièvre' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Antalgiques');
+INSERT INTO categories (name, description)
+SELECT 'Antibiotiques', 'Infections bactériennes' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Antibiotiques');
+INSERT INTO categories (name, description)
+SELECT 'Antihypertenseurs', 'Tension artérielle' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Antihypertenseurs');
+INSERT INTO categories (name, description)
+SELECT 'Antipaludéens', 'Traitement et prévention du paludisme' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Antipaludéens');
+INSERT INTO categories (name, description)
+SELECT 'Vitamines', 'Compléments et vitamines' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Vitamines');
+INSERT INTO categories (name, description)
+SELECT 'Soins et pansements', 'Hygiène, pansements et premiers soins' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Soins et pansements');
+INSERT INTO categories (name, description)
+SELECT 'Divers', 'Autres produits' FROM DUAL
+WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Divers');
+
 -- Paramètres entreprise par défaut
 INSERT INTO app_settings (setting_key, setting_value)
 VALUES
