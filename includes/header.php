@@ -20,7 +20,7 @@ if (!is_logged_in()) {
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
-    <link href="/PHARMACIE%20BLESSING/assets/css/style.css" rel="stylesheet">
+    <link href="<?php echo app_base_url('assets/css/style.css'); ?>" rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -39,8 +39,8 @@ if (!is_logged_in()) {
                         <span class="d-none d-sm-inline">Menu</span>
                     </button>
                     
-                    <a href="/PHARMACIE%20BLESSING/dashboard.php" class="text-decoration-none d-flex align-items-center gap-2">
-                        <img src="/PHARMACIE%20BLESSING/assets/img/pha.jpeg" alt="Pharmacie Blessing" class="logo-clock" style="height:38px;width:38px;object-fit:cover;border-radius:50%;border:2px solid #0d6efd;box-shadow:0 2px 8px rgba(13,110,253,0.18);">
+                    <a href="<?php echo app_base_url('dashboard.php'); ?>" class="text-decoration-none d-flex align-items-center gap-2">
+                        <img src="<?php echo app_base_url('assets/img/pha.jpeg'); ?>" alt="Pharmacie Blessing" class="logo-clock" style="height:38px;width:38px;object-fit:cover;border-radius:50%;border:2px solid #0d6efd;box-shadow:0 2px 8px rgba(13,110,253,0.18);">
                         <span class="fw-bold text-primary fs-6 d-none d-md-inline">PHARMACIE BLESSING</span>
                     </a>
 
@@ -86,7 +86,7 @@ if (!is_logged_in()) {
                             <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2">
                                 <li><a class="dropdown-item py-2" href="#">Profil</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-item py-2 text-danger fw-bold" href="/PHARMACIE%20BLESSING/logout.php">Se deconnecter</a></li>
+                                <li><a class="dropdown-item py-2 text-danger fw-bold" href="<?php echo app_base_url('logout.php'); ?>">Se deconnecter</a></li>
                             </ul>
                         </div>
                     </div>

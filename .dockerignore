@@ -1,0 +1,16 @@
+.git
+.gitignore
+.railway
+backups
+uploads/products/*
+uploads/clients/*
+uploads/backups/*
+!uploads/**/.gitkeep
+*.md
+*.png
+DOC_TECHNIQUE.md
+CHAPITRE_III_CONCEPTION_PLATEFORME.md
+class_diagram.png
+component_diagram.png
+er_diagram.png
+sequence_diagram.png

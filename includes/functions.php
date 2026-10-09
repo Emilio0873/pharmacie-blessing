@@ -6,6 +6,29 @@
 session_start();
 
 /**
+ * Application base URL path (empty on Railway root, local XAMPP subfolder by default).
+ */
+function app_base_url($path = '') {
+    static $root = null;
+    if ($root === null) {
+        $configured = getenv('APP_BASE_URL');
+        if ($configured !== false) {
+            $root = rtrim(str_replace('\\', '/', $configured), '/');
+        } elseif (getenv('RAILWAY_ENVIRONMENT') || getenv('RAILWAY_PROJECT_ID') || getenv('MYSQLHOST')) {
+            $root = '';
+        } else {
+            $root = '/PHARMACIE%20BLESSING';
+        }
+    }
+
+    if ($path === '' || $path === '/') {
+        return $root === '' ? '/' : $root . '/';
+    }
+
+    return $root . '/' . ltrim($path, '/');
+}
+
+/**
  * Redirect to a specific URL
  */
 function redirect($url) {
@@ -33,10 +56,10 @@ function has_role($role_name) {
  */
 function authorize($allowed_roles) {
     if (!is_logged_in()) {
-        redirect('/PHARMACIE%20BLESSING/index.php');
+        redirect(app_base_url('index.php'));
     }
     if (!in_array($_SESSION['role'], $allowed_roles)) {
-        header("Location: /PHARMACIE%20BLESSING/dashboard.php?error=unauthorized");
+        header('Location: ' . app_base_url('dashboard.php?error=unauthorized'));
         exit();
     }
 }

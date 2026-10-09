@@ -253,7 +253,7 @@ require_once '../../includes/header.php';
         <!-- Photo zone (banner) -->
         <div class="card-photo-zone <?php echo $has_photo ? '' : $grad; ?>">
             <?php if ($has_photo): ?>
-                <img class="card-photo-img" src="/PHARMACIE%20BLESSING/uploads/clients/<?php echo htmlspecialchars($c['photo']); ?>" alt="<?php echo htmlspecialchars($c['name']); ?>">
+                <img class="card-photo-img" src="<?php echo app_base_url('uploads/clients/' . rawurlencode($c['photo'])); ?>" alt="<?php echo htmlspecialchars($c['name']); ?>">
             <?php else: ?>
                 <div class="card-avatar-init"><?php echo $initial; ?></div>
             <?php endif; ?>
@@ -262,7 +262,7 @@ require_once '../../includes/header.php';
         <div class="card-body-area">
             <div class="d-flex align-items-start gap-2 mb-2" style="margin-top:-27px;">
                 <?php if ($has_photo): ?>
-                    <img class="card-avatar-circle" src="/PHARMACIE%20BLESSING/uploads/clients/<?php echo htmlspecialchars($c['photo']); ?>" alt="<?php echo htmlspecialchars($c['name']); ?>">
+                    <img class="card-avatar-circle" src="<?php echo app_base_url('uploads/clients/' . rawurlencode($c['photo'])); ?>" alt="<?php echo htmlspecialchars($c['name']); ?>">
                 <?php else: ?>
                     <div class="card-avatar-circle-init <?php echo $grad; ?>"><?php echo $initial; ?></div>
                 <?php endif; ?>

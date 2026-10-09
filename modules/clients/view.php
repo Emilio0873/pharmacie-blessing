@@ -213,7 +213,7 @@ require_once '../../includes/header.php';
     <!-- Couverture -->
     <div class="profile-cover">
         <?php if (!empty($client['photo'])): ?>
-            <img class="cover-photo-img" src="/PHARMACIE%20BLESSING/uploads/clients/<?php echo htmlspecialchars($client['photo']); ?>" alt="Cover">
+            <img class="cover-photo-img" src="<?php echo app_base_url('uploads/clients/' . rawurlencode($client['photo'])); ?>" alt="Cover">
         <?php else: ?>
             <div class="cover-pattern"></div>
         <?php endif; ?>
@@ -232,7 +232,7 @@ require_once '../../includes/header.php';
         <div class="d-flex flex-wrap align-items-end justify-content-between gap-2">
             <div>
                 <?php if (!empty($client['photo'])): ?>
-                    <img class="profile-avatar" src="/PHARMACIE%20BLESSING/uploads/clients/<?php echo htmlspecialchars($client['photo']); ?>" alt="Avatar">
+                    <img class="profile-avatar" src="<?php echo app_base_url('uploads/clients/' . rawurlencode($client['photo'])); ?>" alt="Avatar">
                 <?php else: ?>
                     <div class="profile-avatar-init"><?php echo $init; ?></div>
                 <?php endif; ?>

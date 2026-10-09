@@ -96,7 +96,7 @@ require_once '../../includes/header.php';
         </nav>
         <div class="d-flex align-items-center gap-3">
             <?php if ($client['photo']): ?>
-            <img src="/PHARMACIE BLESSING/uploads/clients/<?php echo htmlspecialchars($client['photo']); ?>" 
+            <img src="<?php echo app_base_url('uploads/clients/' . rawurlencode($client['photo'])); ?>" 
                  style="width:52px;height:52px;object-fit:cover;border-radius:50%;border:3px solid rgba(255,255,255,0.4);">
             <?php else: ?>
             <div style="width:52px;height:52px;background:rgba(255,255,255,0.15);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1.4rem;font-weight:700;">
@@ -133,7 +133,7 @@ require_once '../../includes/header.php';
                 <div class="photo-upload-zone" id="uploadZone" onclick="document.getElementById('photoInput').click()">
                     <?php if ($client['photo']): ?>
                         <img id="photoPreview" class="photo-preview-img" 
-                             src="/PHARMACIE%20BLESSING/uploads/clients/<?php echo htmlspecialchars($client['photo']); ?>" alt="Photo">
+                             src="<?php echo app_base_url('uploads/clients/' . rawurlencode($client['photo'])); ?>" alt="Photo">
                         <span class="current-photo-badge"><i class="fas fa-check me-1"></i>Photo actuelle</span>
                     <?php else: ?>
                         <img id="photoPreview" class="photo-preview-img d-none" src="" alt="Aperçu">

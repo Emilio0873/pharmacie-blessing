@@ -1,4 +1,4 @@
-<?php $base_url = '/PHARMACIE%20BLESSING'; ?>
+<?php $base_url = rtrim(app_base_url(), '/'); if ($base_url === '') { $base_url = ''; } ?>
 <!-- Sidebar -->
 <nav id="sidebar">
     <div class="sidebar-header p-4 text-center">
