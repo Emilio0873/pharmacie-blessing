@@ -377,7 +377,7 @@ WHERE NOT EXISTS (SELECT 1 FROM categories WHERE name = 'Divers');
 INSERT INTO app_settings (setting_key, setting_value)
 VALUES
   ('business_name', 'PHARMACIE BLESSING'),
-  ('business_subtitle', 'Dépôt Pharmaceutique de Référence'),
+  ('business_subtitle', 'Dépôt pharmaceutique'),
   ('business_address', 'Kinshasa, République démocratique du Congo'),
   ('business_phone', '+243 965 431 594'),
   ('business_email', 'contact@blessingpharmacie.com'),

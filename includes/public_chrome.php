@@ -49,11 +49,15 @@ function render_public_nav() {
                 <li class="nav-item"><a class="nav-link" href="<?php echo public_anchor('mission'); ?>">Mission</a></li>
                 <li class="nav-item"><a class="nav-link" href="<?php echo public_anchor('produits'); ?>">Médicaments</a></li>
                 <li class="nav-item"><a class="nav-link<?php echo $self === 'reservation.php' ? ' active' : ''; ?>" href="reservation.php">Réserver</a></li>
-                <li class="nav-item"><a class="nav-link<?php echo $self === 'mes_reservations.php' ? ' active' : ''; ?>" href="mes_reservations.php">Mes réservations</a></li>
+                <li class="nav-item"><a class="nav-link<?php echo in_array($self, ['client_espace.php', 'client_login.php', 'client_register.php'], true) ? ' active' : ''; ?>" href="<?php echo !empty($_SESSION['client_account_id']) ? 'client_espace.php' : 'client_login.php'; ?>">Mon compte</a></li>
                 <li class="nav-item"><a class="nav-link" href="<?php echo public_anchor('contact'); ?>">Contact</a></li>
             </ul>
             <?php render_theme_switch(); ?>
-            <a href="login.php" class="btn-nav-login"><i class="fa-solid fa-right-to-bracket"></i> Se connecter</a>
+            <?php if (!empty($_SESSION['client_account_id'])): ?>
+                <a href="client_espace.php" class="btn-nav-login"><i class="fa-solid fa-user"></i> Espace client</a>
+            <?php else: ?>
+                <a href="client_register.php" class="btn-nav-login"><i class="fa-solid fa-user-plus"></i> Créer un compte</a>
+            <?php endif; ?>
         </div>
     </div>
 </nav>

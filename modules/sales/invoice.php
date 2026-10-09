@@ -59,6 +59,13 @@ if (!empty($sale['invoice_id'])) {
     );
 }
 $show_share = isset($_GET['share']) || isset($_GET['paid']);
+$auto_send = isset($_GET['auto_send']);
+$delivery = $_SESSION['invoice_delivery'] ?? null;
+if (is_array($delivery) && (int)($delivery['sale_id'] ?? 0) === (int)$sale['id']) {
+    unset($_SESSION['invoice_delivery']);
+} else {
+    $delivery = null;
+}
 $sale_ref = '#' . str_pad((int)$sale['id'], 6, '0', STR_PAD_LEFT);
 
 $items = [];
@@ -657,9 +664,35 @@ $reveal_paid = isset($_GET['paid']) && $_GET['paid'] === '1';
     <div class="mt-2 p-2 rounded" style="background:rgba(15,23,42,.55);">
         <small class="text-white-50 d-block mb-1">Envoyer la facture au client :</small>
         <input type="text" class="form-control form-control-sm" readonly value="<?php echo htmlspecialchars($share['url']); ?>" onclick="this.select();">
+        <?php if ($auto_send && $delivery): ?>
+            <small class="d-block mt-2 text-white">
+                <?php if (!empty($delivery['email_sent'])): ?>
+                    Facture envoyée automatiquement par e-mail<?php echo !empty($delivery['email']) ? ' à ' . htmlspecialchars($delivery['email']) : ''; ?>.
+                <?php elseif (!empty($delivery['email'])): ?>
+                    E-mail non expédié par le serveur — utilisez les boutons ci-dessus.
+                <?php endif; ?>
+                <?php if (!empty($delivery['auto_whatsapp'])): ?>
+                    Ouverture WhatsApp / SMS en cours pour le client…
+                <?php endif; ?>
+            </small>
+        <?php endif; ?>
     </div>
     <?php endif; ?>
 </div>
+<?php if ($auto_send && $delivery && !empty($delivery['auto_whatsapp']) && !empty($delivery['whatsapp'])): ?>
+<script>
+(function () {
+    var wa = <?php echo json_encode($delivery['whatsapp']); ?>;
+    var sms = <?php echo json_encode($delivery['sms'] ?? ''); ?>;
+    setTimeout(function () {
+        if (wa) { window.open(wa, '_blank', 'noopener'); }
+        if (sms && <?php echo !empty($delivery['auto_sms']) ? 'true' : 'false'; ?>) {
+            setTimeout(function () { window.location.href = sms; }, 800);
+        }
+    }, 600);
+})();
+</script>
+<?php endif; ?>
 
 <div id="invoiceSheet" class="invoice-wrap">
     <?php if ($is_paid): ?>

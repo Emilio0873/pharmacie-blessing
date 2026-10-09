@@ -51,7 +51,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['action'])) {
     } elseif ($_POST['action'] === 'update_business') {
         try {
             $business_name = sanitize($_POST['business_name'] ?? 'PHARMACIE BLESSING');
-            $business_subtitle = sanitize($_POST['business_subtitle'] ?? 'Dépôt Pharmaceutique de Référence');
+            $business_subtitle = sanitize($_POST['business_subtitle'] ?? 'Dépôt pharmaceutique');
             $business_address = sanitize($_POST['business_address'] ?? '');
             $business_phone = sanitize($_POST['business_phone'] ?? '');
             $business_email = sanitize($_POST['business_email'] ?? '');

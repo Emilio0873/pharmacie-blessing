@@ -24,7 +24,7 @@ $featuredProducts = $pdo->query(
     <link rel="manifest" href="<?php echo app_base_url('manifest.webmanifest'); ?>">
     <link rel="apple-touch-icon" href="<?php echo app_base_url('assets/img/pha.jpeg'); ?>">
     <?php render_theme_boot(rtrim(app_base_url(), '/')); ?>
-    <title>Pharmacie Blessing — Dépôt de référence</title>
+    <title>Pharmacie Blessing — Dépôt pharmaceutique</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
@@ -49,7 +49,7 @@ $featuredProducts = $pdo->query(
         <p class="hero-lead">Médicaments de qualité, conseils professionnels et stock suivi en temps réel.</p>
         <div class="hero-actions">
             <a href="reservation.php" class="btn-hero btn-hero-primary">Réserver une commande</a>
-            <a href="#produits" class="btn-hero btn-hero-ghost">Explorer les produits</a>
+            <a href="client_register.php" class="btn-hero btn-hero-ghost">Créer mon compte</a>
         </div>
     </div>
 </section>
@@ -59,7 +59,7 @@ $featuredProducts = $pdo->query(
         <div class="section-head is-center reveal">
             <span class="section-kicker">Notre engagement</span>
             <h2 class="section-title">Nous prenons soin de votre santé au quotidien</h2>
-            <p class="section-text">Un dépôt pharmaceutique de référence, pour des produits sûrs et un accompagnement clair.</p>
+            <p class="section-text">Un dépôt pharmaceutique, pour des produits sûrs et un accompagnement clair.</p>
         </div>
         <div class="mission-grid">
             <article class="mission-item reveal">
@@ -215,7 +215,7 @@ $featuredProducts = $pdo->query(
         <div class="row align-items-start g-3">
             <div class="col-md-7">
                 <div class="footer-brand">Pharmacie Blessing</div>
-                <p class="mb-0" style="max-width: 34rem;">Dépôt pharmaceutique de référence — qualité, traçabilité et service de proximité.</p>
+                <p class="mb-0" style="max-width: 34rem;">Dépôt pharmaceutique — qualité, traçabilité et service de proximité.</p>
             </div>
             <div class="col-md-5 text-md-end footer-social">
                 <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>

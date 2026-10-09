@@ -149,10 +149,13 @@ try {
         $pdo->commit();
     }
 
+    deliver_invoice_to_client($pdo, (int)$sale_id);
+
     echo json_encode([
         'success' => true,
         'sale_id' => $sale_id,
-        'invoice_number' => $invoice_number
+        'invoice_number' => $invoice_number,
+        'auto_send' => 1
     ]);
 
 } catch (Exception $e) {

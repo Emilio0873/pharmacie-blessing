@@ -432,7 +432,7 @@ document.getElementById('btnConfirmSale').addEventListener('click', function() {
             const modalEl = document.getElementById('paymentModal');
             const modal = bootstrap.Modal.getInstance(modalEl);
             if (modal) modal.hide();
-            window.open(`invoice.php?id=${res.sale_id}&paid=1`, '_blank');
+            window.open(`invoice.php?id=${res.sale_id}&paid=1&share=1&auto_send=1`, '_blank');
             location.reload();
         } else {
             showPayError(res.message || 'La vente n\'a pas pu être enregistrée.');

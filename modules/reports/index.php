@@ -8,7 +8,7 @@ authorize(['Super Admin', 'Admin', 'Gérant']);
 
 $business = get_business_profile($pdo);
 
-$allowed_tabs = ['overview', 'products', 'clients', 'purchases', 'stock'];
+$allowed_tabs = ['overview', 'products', 'clients', 'purchases', 'stock', 'users'];
 $active_tab = isset($_GET['tab']) && in_array($_GET['tab'], $allowed_tabs, true) ? $_GET['tab'] : 'overview';
 
 $date_from_raw = $_GET['date_from'] ?? date('Y-m-01');
@@ -134,6 +134,58 @@ $stmt = $pdo->prepare("SELECT cat.id, cat.name as cat_name, COALESCE(SUM(sd.qty 
     ORDER BY revenue DESC");
 $stmt->execute([$date_from, $date_to]);
 $by_category = $stmt->fetchAll();
+
+$user_sales = [];
+$user_stock = [];
+$user_actions = [];
+$user_logs = [];
+if ($active_tab === 'users') {
+    $stmt = $pdo->prepare("SELECT u.id, u.full_name, r.name as role_name,
+        COUNT(s.id) as nb_ventes,
+        COALESCE(SUM(s.final_amount), 0) as ca
+        FROM users u
+        LEFT JOIN roles r ON r.id = u.role_id
+        LEFT JOIN sales s ON s.user_id = u.id AND DATE(s.sale_date) BETWEEN ? AND ?
+        GROUP BY u.id, u.full_name, r.name
+        HAVING nb_ventes > 0
+        ORDER BY ca DESC");
+    $stmt->execute([$date_from, $date_to]);
+    $user_sales = $stmt->fetchAll();
+
+    $stmt = $pdo->prepare("SELECT u.id, u.full_name, r.name as role_name,
+        SUM(CASE WHEN sm.type = 'IN' THEN 1 ELSE 0 END) as nb_entrees,
+        SUM(CASE WHEN sm.type = 'OUT' THEN 1 ELSE 0 END) as nb_sorties,
+        SUM(CASE WHEN sm.type = 'IN' THEN sm.qty ELSE 0 END) as qty_in,
+        SUM(CASE WHEN sm.type = 'OUT' THEN sm.qty ELSE 0 END) as qty_out
+        FROM stock_movements sm
+        JOIN users u ON u.id = sm.user_id
+        LEFT JOIN roles r ON r.id = u.role_id
+        WHERE DATE(sm.created_at) BETWEEN ? AND ?
+        GROUP BY u.id, u.full_name, r.name
+        ORDER BY (nb_entrees + nb_sorties) DESC");
+    $stmt->execute([$date_from, $date_to]);
+    $user_stock = $stmt->fetchAll();
+
+    $stmt = $pdo->prepare("SELECT u.id, u.full_name, r.name as role_name, a.action, COUNT(*) as nb
+        FROM audit_logs a
+        JOIN users u ON u.id = a.user_id
+        LEFT JOIN roles r ON r.id = u.role_id
+        WHERE DATE(a.created_at) BETWEEN ? AND ?
+        GROUP BY u.id, u.full_name, r.name, a.action
+        ORDER BY u.full_name ASC, nb DESC");
+    $stmt->execute([$date_from, $date_to]);
+    $user_actions = $stmt->fetchAll();
+
+    $stmt = $pdo->prepare("SELECT a.created_at, a.action, a.details, u.full_name, r.name as role_name
+        FROM audit_logs a
+        LEFT JOIN users u ON u.id = a.user_id
+        LEFT JOIN roles r ON r.id = u.role_id
+        WHERE DATE(a.created_at) BETWEEN ? AND ?
+        ORDER BY a.created_at DESC
+        LIMIT 200");
+    $stmt->execute([$date_from, $date_to]);
+    $user_logs = $stmt->fetchAll();
+}
 
 $tab_query = 'tab=' . urlencode($active_tab);
 $period_label = date('d/m/Y', strtotime($date_from)) . ' — ' . date('d/m/Y', strtotime($date_to));
@@ -385,6 +437,7 @@ require_once '../../includes/header.php';
         'clients'   => ['icon' => 'fa-users', 'label' => 'Top clients'],
         'purchases' => ['icon' => 'fa-truck', 'label' => 'Achats'],
         'stock'     => ['icon' => 'fa-exclamation-triangle', 'label' => 'Alertes stock'],
+        'users'     => ['icon' => 'fa-user-check', 'label' => 'Actions utilisateurs'],
     ];
     foreach ($tabs as $key => $tab): ?>
     <li class="nav-item">
@@ -681,6 +734,114 @@ foreach ($out_of_stock as $item) {
                             </td>
                         </tr>
                     <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<?php elseif ($active_tab === 'users'): ?>
+
+<div class="row g-4 mb-4">
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header border-0 pt-4 px-4">
+                <h5 class="fw-bold mb-0"><i class="fas fa-cash-register text-primary me-2"></i>Ventes par utilisateur</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead><tr><th class="ps-4">Utilisateur</th><th>Rôle</th><th class="text-center">Ventes</th><th class="text-end pe-4">CA</th></tr></thead>
+                        <tbody>
+                        <?php if ($user_sales): foreach ($user_sales as $row): ?>
+                            <tr>
+                                <td class="ps-4 fw-bold"><?php echo htmlspecialchars($row['full_name']); ?></td>
+                                <td><span class="badge bg-secondary"><?php echo htmlspecialchars($row['role_name'] ?? ''); ?></span></td>
+                                <td class="text-center"><?php echo (int)$row['nb_ventes']; ?></td>
+                                <td class="text-end pe-4"><?php echo format_currency($row['ca']); ?></td>
+                            </tr>
+                        <?php endforeach; else: ?>
+                            <tr><td colspan="4" class="text-center text-muted py-4">Aucune vente sur la période.</td></tr>
+                        <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="card shadow-sm border-0 h-100">
+            <div class="card-header border-0 pt-4 px-4">
+                <h5 class="fw-bold mb-0"><i class="fas fa-boxes-stacked text-success me-2"></i>Inventaire : mouvements par utilisateur</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover align-middle mb-0">
+                        <thead><tr><th class="ps-4">Utilisateur</th><th>Rôle</th><th class="text-center">Entrées</th><th class="text-center">Sorties</th></tr></thead>
+                        <tbody>
+                        <?php if ($user_stock): foreach ($user_stock as $row): ?>
+                            <tr>
+                                <td class="ps-4 fw-bold"><?php echo htmlspecialchars($row['full_name']); ?></td>
+                                <td><span class="badge bg-secondary"><?php echo htmlspecialchars($row['role_name'] ?? ''); ?></span></td>
+                                <td class="text-center text-success"><?php echo (int)$row['nb_entrees']; ?> <small>(<?php echo (int)$row['qty_in']; ?> u.)</small></td>
+                                <td class="text-center text-danger"><?php echo (int)$row['nb_sorties']; ?> <small>(<?php echo (int)$row['qty_out']; ?> u.)</small></td>
+                            </tr>
+                        <?php endforeach; else: ?>
+                            <tr><td colspan="4" class="text-center text-muted py-4">Aucun mouvement de stock.</td></tr>
+                        <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header border-0 pt-4 px-4">
+        <h5 class="fw-bold mb-0"><i class="fas fa-list-check text-info me-2"></i>Détail des actions par type</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead><tr><th class="ps-4">Utilisateur</th><th>Rôle</th><th>Action</th><th class="text-end pe-4">Occurrences</th></tr></thead>
+                <tbody>
+                <?php if ($user_actions): foreach ($user_actions as $row): ?>
+                    <tr>
+                        <td class="ps-4"><?php echo htmlspecialchars($row['full_name']); ?></td>
+                        <td><?php echo htmlspecialchars($row['role_name'] ?? ''); ?></td>
+                        <td><span class="badge bg-primary"><?php echo htmlspecialchars($row['action']); ?></span></td>
+                        <td class="text-end pe-4 fw-bold"><?php echo (int)$row['nb']; ?></td>
+                    </tr>
+                <?php endforeach; else: ?>
+                    <tr><td colspan="4" class="text-center text-muted py-4">Aucune action enregistrée.</td></tr>
+                <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="card shadow-sm border-0">
+    <div class="card-header border-0 pt-4 px-4">
+        <h5 class="fw-bold mb-0"><i class="fas fa-clock-rotate-left text-warning me-2"></i>Journal détaillé (200 dernières)</h5>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-sm table-hover align-middle mb-0">
+                <thead><tr><th class="ps-4">Date</th><th>Utilisateur</th><th>Rôle</th><th>Action</th><th class="pe-4">Détails</th></tr></thead>
+                <tbody>
+                <?php if ($user_logs): foreach ($user_logs as $row): ?>
+                    <tr>
+                        <td class="ps-4 text-nowrap"><?php echo date('d/m/Y H:i', strtotime($row['created_at'])); ?></td>
+                        <td><?php echo htmlspecialchars($row['full_name'] ?? '—'); ?></td>
+                        <td><small><?php echo htmlspecialchars($row['role_name'] ?? ''); ?></small></td>
+                        <td><?php echo htmlspecialchars($row['action']); ?></td>
+                        <td class="pe-4"><small class="text-muted"><?php echo htmlspecialchars($row['details'] ?? ''); ?></small></td>
+                    </tr>
+                <?php endforeach; else: ?>
+                    <tr><td colspan="5" class="text-center text-muted py-4">Aucune entrée de journal.</td></tr>
+                <?php endif; ?>
                 </tbody>
             </table>
         </div>

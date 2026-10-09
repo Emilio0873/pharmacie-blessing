@@ -48,7 +48,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_order_id']) && cs
         }
         log_activity($pdo, (int)$_SESSION['user_id'], 'Paiement caisse', "{$order['reference']} → vente #{$result['sale_id']}");
         $pdo->commit();
-        redirect('../sales/invoice.php?id=' . (int)$result['sale_id'] . '&paid=1&share=1');
+        deliver_invoice_to_client($pdo, (int)$result['sale_id']);
+        redirect('../sales/invoice.php?id=' . (int)$result['sale_id'] . '&paid=1&share=1&auto_send=1');
     } catch (Exception $e) {
         if ($pdo->inTransaction()) $pdo->rollBack();
         $flash_err = $e->getMessage();

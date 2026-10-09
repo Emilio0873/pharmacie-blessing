@@ -21,6 +21,7 @@ function bootstrap_schema_if_needed(PDO $pdo): void {
         sync_business_phone($pdo);
         ensure_reservation_tables($pdo);
         ensure_counter_order_tables($pdo);
+        ensure_client_accounts_table($pdo);
         ensure_app_roles($pdo);
         ensure_delivery_status_column($pdo);
         ensure_sale_fulfillment_columns($pdo);
@@ -62,6 +63,7 @@ function bootstrap_schema_if_needed(PDO $pdo): void {
     sync_business_phone($pdo);
     ensure_reservation_tables($pdo);
     ensure_counter_order_tables($pdo);
+    ensure_client_accounts_table($pdo);
     ensure_app_roles($pdo);
     ensure_delivery_status_column($pdo);
     ensure_sale_fulfillment_columns($pdo);
@@ -220,14 +222,33 @@ function sync_business_phone(PDO $pdo): void {
     try {
         $phone = '+243 965 431 594';
         $address = 'Kinshasa, République démocratique du Congo';
+        $subtitle = 'Dépôt pharmaceutique';
 
         $pdo->prepare("INSERT INTO app_settings (setting_key, setting_value) VALUES ('business_phone', ?)
             ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([$phone]);
         $pdo->prepare("INSERT INTO app_settings (setting_key, setting_value) VALUES ('business_address', ?)
             ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([$address]);
+        $pdo->prepare("INSERT INTO app_settings (setting_key, setting_value) VALUES ('business_subtitle', ?)
+            ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([$subtitle]);
     } catch (Throwable $e) {
         // settings table may not exist yet
     }
+}
+
+function ensure_client_accounts_table(PDO $pdo): void {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS client_accounts (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        client_id INT NULL,
+        full_name VARCHAR(180) NOT NULL,
+        email VARCHAR(180) NOT NULL,
+        phone VARCHAR(50) NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        status VARCHAR(20) NOT NULL DEFAULT 'active',
+        last_login DATETIME NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY uq_client_accounts_email (email),
+        INDEX idx_client_accounts_phone (phone)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
 /**

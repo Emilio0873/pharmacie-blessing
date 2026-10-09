@@ -370,7 +370,7 @@ function get_business_profile($pdo) {
         'address' => get_app_setting($pdo, 'business_address', 'Kinshasa, République démocratique du Congo'),
         'phone' => get_app_setting($pdo, 'business_phone', '+243 965 431 594'),
         'email' => get_app_setting($pdo, 'business_email', 'contact@blessingpharmacie.com'),
-        'subtitle' => get_app_setting($pdo, 'business_subtitle', 'Dépôt Pharmaceutique de Référence'),
+        'subtitle' => get_app_setting($pdo, 'business_subtitle', 'Dépôt pharmaceutique'),
         'legal_ids' => get_app_setting($pdo, 'business_legal_ids', 'RCCM: CD/KNG/RCCM/20-B-00123 | NIF: A2203947T')
     ];
 }
@@ -580,6 +580,90 @@ function invoice_share_links(PDO $pdo, $saleId, $clientPhone = '', $clientEmail 
             ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($text)
             : 'https://wa.me/?text=' . rawurlencode($text),
         'sms' => 'sms:' . rawurlencode($clientPhone) . '?body=' . rawurlencode($text),
+    ];
+}
+
+function is_client_logged_in() {
+    return !empty($_SESSION['client_account_id']);
+}
+
+function require_client_login() {
+    if (!is_client_logged_in()) {
+        redirect(app_base_url('client_login.php'));
+    }
+}
+
+/**
+ * Send invoice link to client by email (and prepare WhatsApp/SMS channels).
+ */
+function deliver_invoice_to_client(PDO $pdo, $saleId) {
+    $saleId = (int)$saleId;
+    $stmt = $pdo->prepare("SELECT s.id, c.name as client_name, c.phone as client_phone, c.email as client_email,
+                                  inv.invoice_number, inv.total_amount
+                           FROM sales s
+                           LEFT JOIN clients c ON c.id = s.client_id
+                           LEFT JOIN invoices inv ON inv.sale_id = s.id
+                           WHERE s.id = ? LIMIT 1");
+    $stmt->execute([$saleId]);
+    $sale = $stmt->fetch();
+    if (!$sale) {
+        return ['ok' => false, 'email_sent' => false, 'channels' => []];
+    }
+
+    $phone = (string)($sale['client_phone'] ?? '');
+    $email = trim((string)($sale['client_email'] ?? ''));
+    $share = invoice_share_links($pdo, $saleId, $phone, $email);
+    if (!$share) {
+        return ['ok' => false, 'email_sent' => false, 'channels' => []];
+    }
+
+    $emailSent = false;
+    $channels = [];
+    $business = get_business_profile($pdo);
+    $from = $business['email'] ?: 'noreply@blessingpharmacie.com';
+    $label = $share['invoice_number'];
+    $amount = number_format((float)($sale['total_amount'] ?? 0), 0, ',', ' ');
+
+    if ($email !== '' && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        $subject = "Facture $label — Pharmacie Blessing";
+        $body = "Bonjour " . ($sale['client_name'] ?: 'Client') . ",\n\n"
+            . "Votre paiement a été confirmé.\n"
+            . "Facture : $label\n"
+            . "Montant : $amount FC\n\n"
+            . "Consultez votre facture ici :\n{$share['url']}\n\n"
+            . "Pharmacie Blessing — Dépôt pharmaceutique\n"
+            . $business['phone'] . "\n";
+        $headers = "From: Pharmacie Blessing <$from>\r\n"
+            . "Reply-To: $from\r\n"
+            . "Content-Type: text/plain; charset=UTF-8\r\n";
+        $emailSent = @mail($email, '=?UTF-8?B?' . base64_encode($subject) . '?=', $body, $headers);
+        if ($emailSent) {
+            $channels[] = 'email';
+        }
+    }
+
+    if ($phone !== '') {
+        $channels[] = 'whatsapp';
+        $channels[] = 'sms';
+    }
+
+    $_SESSION['invoice_delivery'] = [
+        'sale_id' => $saleId,
+        'email_sent' => $emailSent,
+        'email' => $email,
+        'phone' => $phone,
+        'whatsapp' => $share['whatsapp'],
+        'sms' => $share['sms'],
+        'url' => $share['url'],
+        'auto_whatsapp' => $phone !== '',
+        'auto_sms' => $phone !== '' && !$emailSent,
+    ];
+
+    return [
+        'ok' => true,
+        'email_sent' => $emailSent,
+        'channels' => $channels,
+        'share' => $share,
     ];
 }
 ?>
