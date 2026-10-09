@@ -357,7 +357,7 @@ function get_business_profile($pdo) {
     return [
         'name' => get_app_setting($pdo, 'business_name', 'PHARMACIE BLESSING'),
         'address' => get_app_setting($pdo, 'business_address', 'Kinshasa, République Démocratique du Congo'),
-        'phone' => get_app_setting($pdo, 'business_phone', '+243 972 573 971'),
+        'phone' => get_app_setting($pdo, 'business_phone', '0965431594'),
         'email' => get_app_setting($pdo, 'business_email', 'contact@blessingpharmacie.com'),
         'subtitle' => get_app_setting($pdo, 'business_subtitle', 'Dépôt Pharmaceutique de Référence'),
         'legal_ids' => get_app_setting($pdo, 'business_legal_ids', 'RCCM: CD/KNG/RCCM/20-B-00123 | NIF: A2203947T')

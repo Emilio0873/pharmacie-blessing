@@ -44,6 +44,33 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
+    var detailModal = document.getElementById("productDetailModal");
+    if (detailModal) {
+        detailModal.addEventListener("show.bs.modal", function (event) {
+            var btn = event.relatedTarget;
+            if (!btn) return;
+            document.getElementById("productDetailTitle").textContent = btn.getAttribute("data-name") || "Produit";
+            document.getElementById("productDetailCategory").textContent = btn.getAttribute("data-category") || "";
+            document.getElementById("productDetailDescription").textContent = btn.getAttribute("data-description") || "";
+            document.getElementById("productDetailPrice").textContent = btn.getAttribute("data-price") || "";
+            document.getElementById("productDetailStock").textContent = (btn.getAttribute("data-stock") || "0") + " unités";
+            var brand = btn.getAttribute("data-brand") || "";
+            var brandWrap = document.getElementById("productDetailBrandWrap");
+            document.getElementById("productDetailBrand").textContent = brand;
+            brandWrap.classList.toggle("d-none", brand === "");
+            var image = document.getElementById("productDetailImage");
+            var src = btn.getAttribute("data-image") || "";
+            if (src) {
+                image.src = src;
+                image.alt = btn.getAttribute("data-name") || "";
+                image.classList.remove("d-none");
+            } else {
+                image.classList.add("d-none");
+                image.removeAttribute("src");
+            }
+        });
+    }
+
     var revealEls = document.querySelectorAll(".reveal");
     if ("IntersectionObserver" in window) {
         var observer = new IntersectionObserver(function (entries, obs) {

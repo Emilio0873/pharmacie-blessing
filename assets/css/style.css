@@ -131,6 +131,14 @@ body.sidebar-open {
     background: rgba(11, 18, 32, 0.96) !important;
     border-bottom: 1px solid #1e293b !important;
     backdrop-filter: blur(8px);
+    position: sticky;
+    top: 0;
+    z-index: 1040;
+    overflow: visible;
+}
+
+.navbar .dropdown-menu {
+    z-index: 2000;
 }
 
 .navbar .nav-link,
@@ -163,6 +171,8 @@ body.sidebar-open {
     transition: all 0.3s;
     background: transparent;
     flex: 1;
+    position: relative;
+    z-index: 1;
 }
 
 .container-fluid {
@@ -486,6 +496,15 @@ body.sidebar-open {
 }
 
 @media (max-width: 575.98px) {
+    .navbar .dropdown-menu {
+        position: fixed !important;
+        top: 64px !important;
+        right: 8px !important;
+        left: 8px !important;
+        width: auto !important;
+        transform: none !important;
+    }
+
     h3.fw-bold,
     h2.fw-bold { font-size: 1.2rem; }
     .display-4 { font-size: 2rem; }

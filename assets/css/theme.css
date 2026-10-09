@@ -1,7 +1,14 @@
 .pb-tools {
     display: inline-flex;
     align-items: center;
+    flex-wrap: wrap;
     gap: 0.45rem;
+}
+
+@media (max-width: 575.98px) {
+    .pb-install span { display: none; }
+    .navbar .container-fluid { flex-wrap: wrap; row-gap: 0.4rem; }
+    .public-nav .pb-tools { margin: 0.4rem 0; }
 }
 
 .pb-theme {

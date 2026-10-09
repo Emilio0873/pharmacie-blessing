@@ -18,6 +18,7 @@ function bootstrap_schema_if_needed(PDO $pdo): void {
 
     if (!$needsImport) {
         seed_default_categories($pdo);
+        sync_business_phone($pdo);
         return;
     }
 
@@ -52,6 +53,16 @@ function bootstrap_schema_if_needed(PDO $pdo): void {
     }
 
     seed_default_categories($pdo);
+    sync_business_phone($pdo);
+}
+
+function sync_business_phone(PDO $pdo): void {
+    try {
+        $pdo->prepare("UPDATE app_settings SET setting_value = ? WHERE setting_key = 'business_phone' AND setting_value = ?")
+            ->execute(['0965431594', '+243 972 573 971']);
+    } catch (Throwable $e) {
+        // settings table may not exist yet
+    }
 }
 
 /**

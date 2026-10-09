@@ -117,7 +117,7 @@ $featuredProducts = $pdo->query(
         <div class="row g-4" id="productsGrid">
             <?php if (!empty($featuredProducts)): ?>
                 <?php foreach ($featuredProducts as $product): ?>
-                    <div class="col-md-6 col-lg-4 product-card-col reveal"
+                    <div class="col-12 col-sm-6 col-lg-4 product-card-col reveal"
                          data-name="<?php echo htmlspecialchars(strtolower($product['name'])); ?>"
                          data-category="<?php echo htmlspecialchars(strtolower($product['category_name'] ?: '')); ?>">
                         <article class="product-tile">
@@ -138,7 +138,17 @@ $featuredProducts = $pdo->query(
                                         <span class="product-price"><?php echo number_format((float)$product['sell_price'], 0, ',', ' '); ?> FC</span>
                                         <span class="product-stock">Stock : <?php echo (int)$product['qty']; ?> u.</span>
                                     </div>
-                                    <a href="login.php" class="btn-order">Commander <i class="fa-solid fa-arrow-right"></i></a>
+                                    <button type="button" class="btn-order"
+                                        data-bs-toggle="modal" data-bs-target="#productDetailModal"
+                                        data-name="<?php echo htmlspecialchars($product['name']); ?>"
+                                        data-category="<?php echo htmlspecialchars($product['category_name'] ?: 'Produit'); ?>"
+                                        data-description="<?php echo htmlspecialchars($product['description'] ?: 'Disponible immédiatement en pharmacie.'); ?>"
+                                        data-price="<?php echo number_format((float)$product['sell_price'], 0, ',', ' '); ?> FC"
+                                        data-stock="<?php echo (int)$product['qty']; ?>"
+                                        data-brand="<?php echo htmlspecialchars($product['brand'] ?: ''); ?>"
+                                        data-image="<?php echo !empty($product['image']) ? 'uploads/products/' . htmlspecialchars($product['image']) : ''; ?>">
+                                        Voir les détails
+                                    </button>
                                 </div>
                             </div>
                         </article>
@@ -177,7 +187,7 @@ $featuredProducts = $pdo->query(
                         <i class="fa-solid fa-mobile-screen-button"></i>
                         <div>
                             <strong>Téléphone</strong>
-                            <span>+243 972 573 971</span>
+                            <span><?php echo htmlspecialchars(get_business_profile($pdo)['phone']); ?></span>
                         </div>
                     </li>
                     <li>
@@ -196,6 +206,25 @@ $featuredProducts = $pdo->query(
         </div>
     </div>
 </section>
+
+<div class="modal fade" id="productDetailModal" tabindex="-1" aria-labelledby="productDetailTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productDetailTitle">Détails du produit</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Fermer"></button>
+            </div>
+            <div class="modal-body">
+                <img id="productDetailImage" alt="" class="d-none w-100 rounded mb-3" style="max-height:220px;object-fit:cover;">
+                <p class="product-cat mb-1" id="productDetailCategory"></p>
+                <p class="mb-2" id="productDetailDescription"></p>
+                <p class="mb-1"><strong>Prix :</strong> <span id="productDetailPrice"></span></p>
+                <p class="mb-1"><strong>Stock :</strong> <span id="productDetailStock"></span></p>
+                <p class="mb-0 d-none" id="productDetailBrandWrap"><strong>Marque :</strong> <span id="productDetailBrand"></span></p>
+            </div>
+        </div>
+    </div>
+</div>
 
 <footer class="public-footer">
     <div class="container">
