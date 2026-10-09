@@ -5,7 +5,7 @@ require_once '../../includes/functions.php';
 if (!is_logged_in()) {
     redirect('../../index.php');
 }
-authorize(['Super Admin', 'Admin', 'Caissier', 'Facturier']);
+authorize(['Super Admin', 'Admin', 'Caissier', 'Facturier', 'Livreur']);
 
 if (!isset($_GET['id'])) {
     die('ID de vente manquant.');
@@ -21,7 +21,8 @@ $stmt = $pdo->prepare("SELECT s.*, c.name as client_name, c.phone as client_phon
                               u.full_name as user_name,
                               inv.id as invoice_id, inv.invoice_number, inv.subtotal, inv.discount as invoice_discount,
                               inv.tax_rate, inv.tax_amount, inv.total_amount as invoice_total,
-                              inv.legal_note, inv.created_at as invoice_created_at
+                              inv.legal_note, inv.created_at as invoice_created_at,
+                              c.email as client_email
                        FROM sales s
                        LEFT JOIN clients c ON s.client_id = c.id
                        LEFT JOIN users u ON s.user_id = u.id
@@ -48,6 +49,16 @@ if (preg_match('/médicaments vendus ni repris/iu', $legal_note) || trim($legal_
 }
 $invoice_date = !empty($sale['invoice_created_at']) ? $sale['invoice_created_at'] : $sale['sale_date'];
 $amount_words = ucfirst(amount_to_words_fr($total_ttc));
+$share = null;
+if (!empty($sale['invoice_id'])) {
+    $share = invoice_share_links(
+        $pdo,
+        (int)$sale['id'],
+        (string)($sale['client_phone'] ?? ''),
+        (string)($sale['client_email'] ?? '')
+    );
+}
+$show_share = isset($_GET['share']) || isset($_GET['paid']);
 $sale_ref = '#' . str_pad((int)$sale['id'], 6, '0', STR_PAD_LEFT);
 
 $items = [];
@@ -629,8 +640,25 @@ $reveal_paid = isset($_GET['paid']) && $_GET['paid'] === '1';
             <button class="btn btn-sm btn-warning" onclick="downloadInvoicePdf();">
                 <i class="fa-solid fa-download me-1"></i><span>PDF</span>
             </button>
+            <?php if ($share): ?>
+                <a class="btn btn-sm btn-success" href="<?php echo htmlspecialchars($share['whatsapp']); ?>" target="_blank" rel="noopener">
+                    <i class="fa-brands fa-whatsapp me-1"></i><span>WhatsApp</span>
+                </a>
+                <a class="btn btn-sm btn-info text-white" href="<?php echo htmlspecialchars($share['sms']); ?>">
+                    <i class="fa-solid fa-sms me-1"></i><span>SMS</span>
+                </a>
+                <a class="btn btn-sm btn-primary" href="<?php echo htmlspecialchars($share['email']); ?>">
+                    <i class="fa-solid fa-envelope me-1"></i><span>E-mail</span>
+                </a>
+            <?php endif; ?>
         </div>
     </div>
+    <?php if ($share && $show_share): ?>
+    <div class="mt-2 p-2 rounded" style="background:rgba(15,23,42,.55);">
+        <small class="text-white-50 d-block mb-1">Envoyer la facture au client :</small>
+        <input type="text" class="form-control form-control-sm" readonly value="<?php echo htmlspecialchars($share['url']); ?>" onclick="this.select();">
+    </div>
+    <?php endif; ?>
 </div>
 
 <div id="invoiceSheet" class="invoice-wrap">

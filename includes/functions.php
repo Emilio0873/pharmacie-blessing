@@ -517,4 +517,69 @@ function build_location_address($commune, $avenue, $landmark, $extra = '') {
     ]);
     return implode(' — ', $parts);
 }
+
+function app_absolute_url($path = '') {
+    $forwarded = strtolower((string)($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? ''));
+    $https = $forwarded === 'https'
+        || (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off');
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $base = rtrim(app_base_url(), '/');
+    if ($base === '/') {
+        $base = '';
+    }
+    return ($https ? 'https' : 'http') . '://' . $host . $base . '/' . ltrim((string)$path, '/');
+}
+
+function phone_to_whatsapp($phone) {
+    $digits = preg_replace('/\D+/', '', (string)$phone);
+    if ($digits === '') {
+        return '';
+    }
+    if (str_starts_with($digits, '0')) {
+        $digits = '243' . substr($digits, 1);
+    }
+    return $digits;
+}
+
+function ensure_invoice_share_token(PDO $pdo, $invoiceId) {
+    ensure_invoice_share_column($pdo);
+    $invoiceId = (int)$invoiceId;
+    $stmt = $pdo->prepare("SELECT share_token FROM invoices WHERE id = ?");
+    $stmt->execute([$invoiceId]);
+    $token = $stmt->fetchColumn();
+    if (is_string($token) && $token !== '') {
+        return $token;
+    }
+    $token = bin2hex(random_bytes(16));
+    $pdo->prepare("UPDATE invoices SET share_token = ? WHERE id = ?")->execute([$token, $invoiceId]);
+    return $token;
+}
+
+function invoice_share_links(PDO $pdo, $saleId, $clientPhone = '', $clientEmail = '') {
+    ensure_invoicing_tables($pdo);
+    $saleId = (int)$saleId;
+    $inv = $pdo->prepare("SELECT id, invoice_number FROM invoices WHERE sale_id = ? LIMIT 1");
+    $inv->execute([$saleId]);
+    $row = $inv->fetch();
+    if (!$row) {
+        return null;
+    }
+    $token = ensure_invoice_share_token($pdo, (int)$row['id']);
+    $url = app_absolute_url('facture.php?t=' . urlencode($token));
+    $label = $row['invoice_number'] ?: format_invoice_number($saleId);
+    $text = "Pharmacie Blessing — Votre facture $label : $url";
+    $waPhone = phone_to_whatsapp($clientPhone);
+    return [
+        'url' => $url,
+        'invoice_number' => $label,
+        'message' => $text,
+        'email' => $clientEmail !== ''
+            ? 'mailto:' . rawurlencode($clientEmail) . '?subject=' . rawurlencode("Facture $label - Pharmacie Blessing") . '&body=' . rawurlencode($text)
+            : 'mailto:?subject=' . rawurlencode("Facture $label - Pharmacie Blessing") . '&body=' . rawurlencode($text),
+        'whatsapp' => $waPhone !== ''
+            ? 'https://wa.me/' . $waPhone . '?text=' . rawurlencode($text)
+            : 'https://wa.me/?text=' . rawurlencode($text),
+        'sms' => 'sms:' . rawurlencode($clientPhone) . '?body=' . rawurlencode($text),
+    ];
+}
 ?>

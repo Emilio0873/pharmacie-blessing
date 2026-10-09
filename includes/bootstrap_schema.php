@@ -24,6 +24,7 @@ function bootstrap_schema_if_needed(PDO $pdo): void {
         ensure_app_roles($pdo);
         ensure_delivery_status_column($pdo);
         ensure_sale_fulfillment_columns($pdo);
+        ensure_invoice_share_column($pdo);
         return;
     }
 
@@ -64,6 +65,7 @@ function bootstrap_schema_if_needed(PDO $pdo): void {
     ensure_app_roles($pdo);
     ensure_delivery_status_column($pdo);
     ensure_sale_fulfillment_columns($pdo);
+    ensure_invoice_share_column($pdo);
 }
 
 function ensure_app_roles(PDO $pdo): void {
@@ -122,6 +124,15 @@ function ensure_sale_fulfillment_columns(PDO $pdo): void {
     ensure_column($pdo, 'sales', 'location_commune', 'location_commune VARCHAR(120) NULL');
     ensure_column($pdo, 'sales', 'location_avenue', 'location_avenue VARCHAR(180) NULL');
     ensure_column($pdo, 'sales', 'location_landmark', 'location_landmark VARCHAR(180) NULL');
+}
+
+function ensure_invoice_share_column(PDO $pdo): void {
+    ensure_column($pdo, 'invoices', 'share_token', 'share_token VARCHAR(64) NULL');
+    try {
+        $pdo->exec("CREATE UNIQUE INDEX idx_invoices_share_token ON invoices (share_token)");
+    } catch (Throwable $e) {
+        // index may already exist
+    }
 }
 
 function ensure_counter_order_tables(PDO $pdo): void {

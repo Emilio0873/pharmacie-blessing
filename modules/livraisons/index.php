@@ -167,6 +167,7 @@ require_once '../../includes/header.php';
                                         <input type="hidden" name="action" value="livrer">
                                         <button class="btn btn-sm btn-success"><?php echo $isDelivery ? 'Livrée' : 'Remise effectuée'; ?></button>
                                     </form>
+                                    <a class="btn btn-sm btn-outline-light" href="../sales/invoice.php?id=<?php echo (int)$row['id']; ?>&share=1">Facture / envoi</a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

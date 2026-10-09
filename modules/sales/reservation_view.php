@@ -67,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['validate_payment'])) 
 
             log_activity($pdo, (int)$_SESSION['user_id'], 'Réservation encaissée', "{$reservation['reference']} → vente #{$result['sale_id']} / {$result['invoice_number']}");
             $pdo->commit();
-            redirect('invoice.php?id=' . $result['sale_id'] . '&paid=1');
+            redirect('invoice.php?id=' . $result['sale_id'] . '&paid=1&share=1');
         } catch (Exception $e) {
             if ($pdo->inTransaction()) {
                 $pdo->rollBack();
