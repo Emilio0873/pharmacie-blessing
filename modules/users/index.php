@@ -139,7 +139,10 @@ $admins_u  = count(array_filter($users, fn($u) => $u['role_name'] === 'Super Adm
                             $role_class = match($role_n) {
                                 'Super Admin' => 'bg-danger',
                                 'Admin'       => 'bg-warning text-dark',
-                                'Magasinier'  => 'bg-info text-dark',
+                                'Gérant'      => 'bg-info text-dark',
+                                'Caissier'    => 'bg-primary',
+                                'Facturier'   => 'bg-success',
+                                'Livreur'     => 'bg-secondary',
                                 default       => 'bg-secondary'
                             };
                             ?>

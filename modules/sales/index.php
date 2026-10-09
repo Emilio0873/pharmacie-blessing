@@ -4,7 +4,7 @@ require_once '../../config/db.php';
 require_once '../../includes/functions.php';
 
 if (!is_logged_in()) redirect('../../index.php');
-authorize(['Super Admin', 'Admin', 'Caissier']);
+authorize(['Super Admin', 'Admin', 'Caissier', 'Facturier']);
 ensure_invoicing_tables($pdo);
 
 $search = isset($_GET['search']) ? sanitize($_GET['search']) : '';

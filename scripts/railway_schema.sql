@@ -1,4 +1,4 @@
-﻿-- ============================================================
+-- ============================================================
 -- PHARMACIE BLESSING - Script SQL complet
 -- Base de donnees + tables + relations (MySQL / MariaDB)
 -- ============================================================
@@ -118,6 +118,7 @@ CREATE TABLE IF NOT EXISTS sales (
   total_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
   discount DECIMAL(12,2) NOT NULL DEFAULT 0,
   final_amount DECIMAL(12,2) NOT NULL DEFAULT 0,
+  delivery_status VARCHAR(30) NOT NULL DEFAULT 'a_preparer',
   sale_date DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_sales_client FOREIGN KEY (client_id) REFERENCES clients(id)
     ON UPDATE CASCADE ON DELETE SET NULL,
@@ -325,8 +326,10 @@ INSERT INTO roles (name, permissions)
 VALUES
   ('Super Admin', 'AccÃ¨s total au systÃ¨me'),
   ('Admin', 'Gestion complÃ¨te sauf configuration super admin'),
-  ('Magasinier', 'Gestion stock, achats, ventes, clients, fournisseurs'),
-  ('Caissier', 'Vente POS et module caisse')
+  ('Gérant', 'Gestion stock, achats, fournisseurs et rapports'),
+  ('Caissier', 'Vente POS et module caisse'),
+  ('Facturier', 'Factures, reservations en ligne et clients'),
+  ('Livreur', 'Preparation et remise des commandes payees')
 ON DUPLICATE KEY UPDATE
   permissions = VALUES(permissions);
 

@@ -4,7 +4,7 @@ require_once '../../config/db.php';
 require_once '../../includes/functions.php';
 
 if (!is_logged_in()) redirect('../../index.php');
-authorize(['Super Admin', 'Admin', 'Caissier']);
+authorize(['Super Admin', 'Admin', 'Caissier', 'Facturier']);
 
 $error = '';
 $success = '';
@@ -133,7 +133,7 @@ require_once '../../includes/header.php';
                 <div class="row g-3">
                     <div class="col-12">
                         <div class="field-label">Nom complet <span class="text-danger">*</span></div>
-                        <input type="text" class="form-control" name="name" required placeholder="Ex: Jean Dupont" value="<?php echo htmlspecialchars($_POST['name'] ?? ''); ?>">
+                        <input type="text" class="form-control" name="name" required placeholder="Ex: Marie Kabongo" value="<?php echo htmlspecialchars($_POST['name'] ?? ''); ?>">
                     </div>
                     <div class="col-12 col-md-6">
                         <div class="field-label">Téléphone</div>
@@ -146,7 +146,7 @@ require_once '../../includes/header.php';
                         <div class="field-label">Email</div>
                         <div class="input-group">
                             <span class="input-group-text bg-light border-end-0 rounded-start-3"><i class="fas fa-envelope text-muted small"></i></span>
-                            <input type="email" class="form-control border-start-0" name="email" placeholder="jean@example.com" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" style="border-radius:0 12px 12px 0;">
+                            <input type="email" class="form-control border-start-0" name="email" placeholder="client@example.com" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>" style="border-radius:0 12px 12px 0;">
                         </div>
                     </div>
                     <div class="col-12">

@@ -68,7 +68,7 @@ require_once '../../includes/header.php';
                 <div class="row g-4">
                     <div class="col-md-6">
                         <label class="form-label fw-bold">Nom Complet *</label>
-                        <input type="text" class="form-control" name="full_name" required placeholder="Ex: Jean Dupont"
+                        <input type="text" class="form-control" name="full_name" required placeholder="Ex: Marie Kabongo"
                             value="<?php echo isset($_POST['full_name']) ? htmlspecialchars($_POST['full_name']) : ''; ?>">
                     </div>
                     <div class="col-md-6">

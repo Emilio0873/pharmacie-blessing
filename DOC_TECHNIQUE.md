@@ -44,7 +44,7 @@ Stocke les comptes qui ont accès au tableau de bord.
 | `status` | ENUM | Actif / Inactif |
 | `created_at` | DATETIME | Date de création |
 
-**Rôles existants :** `Super Admin`, `Admin`, `Magasinier`, `Caissier`
+**Rôles existants :** `Super Admin`, `Admin`, `Gérant`, `Caissier`, `Facturier`, `Livreur`
 
 ---
 

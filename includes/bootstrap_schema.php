@@ -20,6 +20,8 @@ function bootstrap_schema_if_needed(PDO $pdo): void {
         seed_default_categories($pdo);
         sync_business_phone($pdo);
         ensure_reservation_tables($pdo);
+        ensure_app_roles($pdo);
+        ensure_delivery_status_column($pdo);
         return;
     }
 
@@ -56,6 +58,44 @@ function bootstrap_schema_if_needed(PDO $pdo): void {
     seed_default_categories($pdo);
     sync_business_phone($pdo);
     ensure_reservation_tables($pdo);
+    ensure_app_roles($pdo);
+    ensure_delivery_status_column($pdo);
+}
+
+function ensure_app_roles(PDO $pdo): void {
+    try {
+        $pdo->exec("UPDATE roles SET name = 'Gérant', permissions = 'Gestion stock, achats, fournisseurs et rapports' WHERE name = 'Magasinier'");
+        $roles = [
+            ['Super Admin', 'Accès total au système'],
+            ['Admin', 'Gestion complète sauf configuration super admin'],
+            ['Gérant', 'Gestion stock, achats, fournisseurs et rapports'],
+            ['Caissier', 'Vente POS et module caisse'],
+            ['Facturier', 'Factures, réservations en ligne et clients'],
+            ['Livreur', 'Préparation et remise des commandes payées'],
+        ];
+        $stmt = $pdo->prepare("INSERT INTO roles (name, permissions)
+            SELECT ?, ? FROM DUAL
+            WHERE NOT EXISTS (SELECT 1 FROM roles WHERE name = ?)");
+        foreach ($roles as $role) {
+            $stmt->execute([$role[0], $role[1], $role[0]]);
+            $pdo->prepare("UPDATE roles SET permissions = ? WHERE name = ?")->execute([$role[1], $role[0]]);
+        }
+    } catch (Throwable $e) {
+        // roles table may not exist yet during first import
+    }
+}
+
+function ensure_delivery_status_column(PDO $pdo): void {
+    try {
+        $pdo->query("SELECT delivery_status FROM sales LIMIT 1");
+    } catch (Throwable $e) {
+        try {
+            $pdo->exec("ALTER TABLE sales ADD COLUMN delivery_status VARCHAR(30) NOT NULL DEFAULT 'a_preparer'");
+            $pdo->exec("UPDATE sales SET delivery_status = 'livree'");
+        } catch (Throwable $e2) {
+            // ignore if sales missing
+        }
+    }
 }
 
 function ensure_reservation_tables(PDO $pdo): void {

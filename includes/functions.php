@@ -50,6 +50,17 @@ function has_role($role_name) {
     return isset($_SESSION['role']) && $_SESSION['role'] === $role_name;
 }
 
+function home_path_for_role($role = null) {
+    $role = $role ?? ($_SESSION['role'] ?? '');
+    return match ($role) {
+        'Caissier' => 'modules/caisse/index.php',
+        'Gérant' => 'modules/products/index.php',
+        'Facturier' => 'modules/sales/reservations.php',
+        'Livreur' => 'modules/livraisons/index.php',
+        default => 'dashboard.php',
+    };
+}
+
 /**
  * Authorize access for specific roles
  * @param array $allowed_roles

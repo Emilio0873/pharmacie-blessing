@@ -4,7 +4,7 @@ require_once '../../config/db.php';
 require_once '../../includes/functions.php';
 
 if (!is_logged_in()) redirect('../../index.php');
-authorize(['Super Admin', 'Admin', 'Magasinier']);
+authorize(['Super Admin', 'Admin', 'Gérant']);
 
 $search = isset($_GET['search']) ? sanitize($_GET['search']) : '';
 $type = isset($_GET['type']) ? sanitize($_GET['type']) : '';

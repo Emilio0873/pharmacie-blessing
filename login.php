@@ -4,11 +4,7 @@ require_once 'includes/functions.php';
 require_once 'includes/ui_shell.php';
 
 if (is_logged_in()) {
-    if ($_SESSION['role'] === 'Caissier') {
-        redirect('modules/caisse/index.php');
-    } else {
-        redirect('dashboard.php');
-    }
+    redirect(home_path_for_role());
 }
 
 $error = '';
@@ -32,11 +28,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $pdo->prepare("UPDATE users SET last_login = NOW() WHERE id = ?")->execute([$user['id']]);
                 log_activity($pdo, $user['id'], 'Connexion', "L'utilisateur s'est connecte.");
 
-                if ($_SESSION['role'] === 'Caissier') {
-                    redirect('modules/caisse/index.php');
-                } else {
-                    redirect('dashboard.php');
-                }
+                redirect(home_path_for_role());
             } else {
                 $error = "Votre compte est desactive. Contactez l'administrateur.";
             }

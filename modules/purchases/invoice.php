@@ -5,7 +5,7 @@ require_once '../../includes/functions.php';
 if (!is_logged_in()) {
     redirect('../../index.php');
 }
-authorize(['Super Admin', 'Admin', 'Magasinier']);
+authorize(['Super Admin', 'Admin', 'Gérant']);
 
 $business = get_business_profile($pdo);
 
@@ -306,7 +306,7 @@ $items = $stmt_items->fetchAll();
                 <div class="section-title">Destinataire (Espace Réception)</div>
                 <div class="party-details fw-bold text-dark"><?php echo htmlspecialchars($business['name']); ?></div>
                 <div class="party-details text-muted">
-                    Réceptionné par : <?php echo htmlspecialchars($purchase['user_name'] ?? 'Magasinier Principal'); ?><br>
+                    Réceptionné par : <?php echo htmlspecialchars($purchase['user_name'] ?? 'Gérant Principal'); ?><br>
                     <?php echo htmlspecialchars($business['address']); ?>
                 </div>
             </div>
@@ -388,7 +388,7 @@ $items = $stmt_items->fetchAll();
         <!-- Invoice footer -->
         <div class="invoice-footer text-center">
             <p class="mb-1"><strong><?php echo htmlspecialchars($business['name']); ?></strong> - Agréée par le Ministère de la Santé de la République Démocratique du Congo.</p>
-            <p class="mb-0">Validation informatisée des entrées magasinier.</p>
+            <p class="mb-0">Validation informatisée des entrées Gérant.</p>
         </div>
 
     </div>

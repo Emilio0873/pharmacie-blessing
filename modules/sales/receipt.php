@@ -5,7 +5,7 @@ require_once '../../includes/functions.php';
 if (!is_logged_in()) {
     redirect('../../index.php');
 }
-authorize(['Super Admin', 'Admin', 'Caissier']);
+authorize(['Super Admin', 'Admin', 'Caissier', 'Facturier']);
 
 $business = get_business_profile($pdo);
 

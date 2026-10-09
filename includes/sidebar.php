@@ -18,7 +18,8 @@
             </a>
         </li>
         <?php endif; ?>
-        <?php if (!has_role('Magasinier')): ?>
+
+        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Caissier')): ?>
         <li class="mb-2">
             <a href="<?php echo $base_url; ?>/modules/caisse/index.php" class="nav-link p-3 rounded fw-bold <?php echo strpos($_SERVER['PHP_SELF'], '/modules/caisse/') !== false ? 'active' : ''; ?>">
                 Module Caisse
@@ -26,7 +27,7 @@
         </li>
         <?php endif; ?>
 
-        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Magasinier')): ?>
+        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Gérant')): ?>
         <li class="sidebar-label px-3 pt-3 pb-2 text-uppercase fw-bold">Gestion des Stocks</li>
         <li class="mb-2">
             <a href="#productSubmenu" data-bs-toggle="collapse" aria-expanded="false" class="nav-link p-3 rounded d-flex justify-content-between align-items-center">
@@ -46,26 +47,41 @@
         </li>
         <?php endif; ?>
 
-        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Caissier')): ?>
+        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Caissier') || has_role('Facturier')): ?>
         <li class="sidebar-label px-3 pt-3 pb-2 text-uppercase fw-bold">Ventes</li>
+        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Caissier') || has_role('Facturier')): ?>
         <li class="mb-2">
             <a href="<?php echo $base_url; ?>/modules/sales/index.php" class="nav-link p-3 rounded">
                 Ventes et Factures
             </a>
         </li>
+        <?php endif; ?>
+        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Caissier')): ?>
         <li class="mb-2">
             <a href="<?php echo $base_url; ?>/modules/sales/pos.php" class="nav-link p-3 rounded fw-bold">
                 Vente Rapide (POS)
             </a>
         </li>
+        <?php endif; ?>
+        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Caissier') || has_role('Facturier')): ?>
         <li class="mb-2">
             <a href="<?php echo $base_url; ?>/modules/sales/reservations.php" class="nav-link p-3 rounded <?php echo basename($_SERVER['PHP_SELF']) === 'reservations.php' || basename($_SERVER['PHP_SELF']) === 'reservation_view.php' ? 'active' : ''; ?>">
                 Réservations en ligne
             </a>
         </li>
         <?php endif; ?>
+        <?php endif; ?>
 
-        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Magasinier')): ?>
+        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Livreur')): ?>
+        <li class="sidebar-label px-3 pt-3 pb-2 text-uppercase fw-bold">Livraison</li>
+        <li class="mb-2">
+            <a href="<?php echo $base_url; ?>/modules/livraisons/index.php" class="nav-link p-3 rounded fw-bold <?php echo strpos($_SERVER['PHP_SELF'], '/modules/livraisons/') !== false ? 'active' : ''; ?>">
+                Commandes à remettre
+            </a>
+        </li>
+        <?php endif; ?>
+
+        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Gérant')): ?>
         <li class="sidebar-label px-3 pt-3 pb-2 text-uppercase fw-bold">Achats</li>
         <li class="mb-2">
             <a href="<?php echo $base_url; ?>/modules/purchases/index.php" class="nav-link p-3 rounded">
@@ -74,7 +90,7 @@
         </li>
         <?php endif; ?>
 
-        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Caissier')): ?>
+        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Caissier') || has_role('Facturier')): ?>
         <li class="sidebar-label px-3 pt-3 pb-2 text-uppercase fw-bold">Partenaires</li>
         <li class="mb-2">
             <a href="<?php echo $base_url; ?>/modules/clients/index.php" class="nav-link p-3 rounded">
@@ -83,7 +99,7 @@
         </li>
         <?php endif; ?>
 
-        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Magasinier')): ?>
+        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Gérant')): ?>
         <li class="mb-2">
             <a href="<?php echo $base_url; ?>/modules/suppliers/index.php" class="nav-link p-3 rounded">
                 Fournisseurs
@@ -91,7 +107,7 @@
         </li>
         <?php endif; ?>
 
-        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Magasinier')): ?>
+        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Gérant')): ?>
         <li class="sidebar-label px-3 pt-3 pb-2 text-uppercase fw-bold">Système</li>
         <li class="mb-2">
             <a href="<?php echo $base_url; ?>/modules/reports/index.php" class="nav-link p-3 rounded <?php echo (strpos($_SERVER['PHP_SELF'], '/modules/reports/') !== false && basename($_SERVER['PHP_SELF']) === 'index.php') ? 'active' : ''; ?>">

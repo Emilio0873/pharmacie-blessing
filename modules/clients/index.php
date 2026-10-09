@@ -4,7 +4,7 @@ require_once '../../config/db.php';
 require_once '../../includes/functions.php';
 
 if (!is_logged_in()) redirect('../../index.php');
-authorize(['Super Admin', 'Admin', 'Caissier']);
+authorize(['Super Admin', 'Admin', 'Caissier', 'Facturier']);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['delete_id'])) {
     if (!csrf_valid()) {

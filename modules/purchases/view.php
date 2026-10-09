@@ -8,7 +8,7 @@ if (!is_logged_in() || !isset($_GET['id'])) {
     echo json_encode(['success' => false, 'message' => 'Accès refusé ou ID manquant.']);
     exit;
 }
-if (!in_array($_SESSION['role'] ?? '', ['Super Admin', 'Admin', 'Magasinier'])) {
+if (!in_array($_SESSION['role'] ?? '', ['Super Admin', 'Admin', 'Gérant'])) {
     echo json_encode(['success' => false, 'message' => 'Accès non autorisé.']);
     exit;
 }
