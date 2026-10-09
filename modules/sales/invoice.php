@@ -21,7 +21,7 @@ $stmt = $pdo->prepare("SELECT s.*, c.name as client_name, c.phone as client_phon
                               u.full_name as user_name,
                               inv.id as invoice_id, inv.invoice_number, inv.subtotal, inv.discount as invoice_discount,
                               inv.tax_rate, inv.tax_amount, inv.total_amount as invoice_total,
-                              inv.payment_mode, inv.legal_note, inv.created_at as invoice_created_at
+                              inv.legal_note, inv.created_at as invoice_created_at
                        FROM sales s
                        LEFT JOIN clients c ON s.client_id = c.id
                        LEFT JOIN users u ON s.user_id = u.id
@@ -40,7 +40,6 @@ $discount = isset($sale['invoice_discount']) ? (float)$sale['invoice_discount'] 
 $tax_rate = isset($sale['tax_rate']) ? (float)$sale['tax_rate'] : 0;
 $tax_amount = isset($sale['tax_amount']) ? (float)$sale['tax_amount'] : 0;
 $total_ttc = isset($sale['invoice_total']) ? (float)$sale['invoice_total'] : (float)($sale['final_amount'] ?? ($subtotal - $discount));
-$payment_mode = !empty($sale['payment_mode']) ? $sale['payment_mode'] : 'Espèces';
 $legal_note_default = 'Les médicaments vendus ne sont ni repris ni échangés.';
 $legal_note = !empty($sale['legal_note']) ? $sale['legal_note'] : $legal_note_default;
 // Normalize legacy / incorrect wording from older sales
@@ -639,7 +638,7 @@ $reveal_paid = isset($_GET['paid']) && $_GET['paid'] === '1';
     <div class="paid-watermark<?php echo $reveal_paid ? ' reveal' : ''; ?>" aria-hidden="true">
         <div class="paid-watermark-stamp">
             Facture payée
-            <small>Paiement validé — <?php echo htmlspecialchars($payment_mode); ?></small>
+            <small>Paiement validé</small>
         </div>
     </div>
     <?php endif; ?>
@@ -667,8 +666,6 @@ $reveal_paid = isset($_GET['paid']) && $_GET['paid'] === '1';
                 <span class="value"><?php echo htmlspecialchars($invoice_number); ?></span>
                 <span class="label">Date</span>
                 <span class="value"><?php echo date('d/m/Y H:i', strtotime($invoice_date)); ?></span>
-                <span class="label">Paiement</span>
-                <span class="value"><?php echo htmlspecialchars($payment_mode); ?></span>
                 <span class="label">Statut</span>
                 <span class="value" style="color:#16a34a;">PAYÉE</span>
                 <span class="label">Réf. vente</span>

@@ -12,7 +12,7 @@ $date_from = isset($_GET['date_from']) ? $_GET['date_from'] : date('Y-m-01');
 $date_to = isset($_GET['date_to']) ? $_GET['date_to'] : date('Y-m-d');
 
 $query = "SELECT s.*, c.name as client_name, u.full_name as user_name,
-                 inv.invoice_number, inv.payment_mode, inv.tax_rate, inv.tax_amount, inv.total_amount AS invoice_total
+                 inv.invoice_number, inv.tax_rate, inv.tax_amount, inv.total_amount AS invoice_total
           FROM sales s 
           LEFT JOIN clients c ON s.client_id = c.id 
           LEFT JOIN users u ON s.user_id = u.id
@@ -27,13 +27,11 @@ if ($search) {
         OR CAST(s.id AS CHAR) = ?
         OR inv.invoice_number LIKE ?
         OR REPLACE(UPPER(inv.invoice_number), '-', '') = REPLACE(UPPER(?), '-', '')
-        OR inv.payment_mode LIKE ?
     )";
     $params[] = "%$search%";
     $params[] = (int)$search;
     $params[] = "%$search%";
     $params[] = $search;
-    $params[] = "%$search%";
 }
 if ($date_from) {
     $query .= " AND DATE(s.sale_date) >= ?";
@@ -201,7 +199,7 @@ require_once '../../includes/header.php';
                 <label class="form-label small fw-bold text-muted">Recherche</label>
                 <div class="input-group">
                     <span class="input-group-text bg-white border-end-0"><i class="fas fa-search text-muted"></i></span>
-                    <input type="text" class="form-control border-start-0" name="search" placeholder="Client, FAC-000001, mode de paiement..." value="<?php echo htmlspecialchars($search); ?>">
+                    <input type="text" class="form-control border-start-0" name="search" placeholder="Client, FAC-000001..." value="<?php echo htmlspecialchars($search); ?>">
                 </div>
             </div>
             <div class="col-6 col-md-3 col-lg-2">
@@ -235,7 +233,6 @@ require_once '../../includes/header.php';
                         <th class="ps-4">N° Vente</th>
                         <th>Date & Heure</th>
                         <th>Client</th>
-                        <th>Mode Paiement</th>
                         <th>Caissier</th>
                         <th>Montant TTC</th>
                         <th class="text-center d-print-none">Actions</th>
@@ -248,7 +245,6 @@ require_once '../../includes/header.php';
                                 <td class="ps-4 fw-bold text-primary"><?php echo htmlspecialchars($sale['invoice_number'] ?? format_invoice_number($sale['id'])); ?></td>
                                 <td><?php echo date('d/m/Y H:i', strtotime($sale['sale_date'])); ?></td>
                                 <td class="fw-600"><?php echo htmlspecialchars($sale['client_name'] ?? 'Client de passage'); ?></td>
-                                <td><span class="badge bg-light text-info border border-info-subtle"><?php echo htmlspecialchars($sale['payment_mode'] ?? 'Espèces'); ?></span></td>
                                 <td><small class="text-muted"><i class="fas fa-user me-1"></i> <?php echo htmlspecialchars($sale['user_name'] ?? 'N/A'); ?></small></td>
                                 <td class="fw-bold text-success"><?php echo format_currency($sale['final_amount']); ?></td>
                                 <td class="text-center d-print-none">
@@ -272,7 +268,7 @@ require_once '../../includes/header.php';
                         <?php endforeach; ?>
                     <?php else: ?>
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">
+                            <td colspan="6" class="text-center py-5 text-muted">
                                 <i class="fas fa-receipt fa-3x mb-3 opacity-25 d-block"></i> Aucune vente trouvée pour cette période.
                             </td>
                         </tr>

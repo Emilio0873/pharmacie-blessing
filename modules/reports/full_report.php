@@ -65,21 +65,10 @@ $stmt = $pdo->prepare("SELECT COUNT(*) as nb, COALESCE(SUM(total_amount), 0) as 
 $stmt->execute([$date_from, $date_to]);
 $kpi_purchases = $stmt->fetch();
 
-// Modes de paiement
-$stmt = $pdo->prepare("SELECT COALESCE(inv.payment_mode, 'Espèces') as mode,
-    COUNT(*) as nb, COALESCE(SUM(s.final_amount), 0) as total
-    FROM sales s
-    LEFT JOIN invoices inv ON inv.sale_id = s.id
-    WHERE DATE(s.sale_date) BETWEEN ? AND ?
-    GROUP BY COALESCE(inv.payment_mode, 'Espèces')
-    ORDER BY total DESC");
-$stmt->execute([$date_from, $date_to]);
-$payment_modes = $stmt->fetchAll();
-
 // Détail ventes
 $sales_sql = "SELECT s.id, s.sale_date, s.total_amount, s.discount, s.final_amount,
     c.name as client_name, u.full_name as cashier,
-    inv.invoice_number, inv.payment_mode, inv.tax_rate, inv.tax_amount
+    inv.invoice_number, inv.tax_rate, inv.tax_amount
     FROM sales s
     LEFT JOIN clients c ON c.id = s.client_id
     LEFT JOIN users u ON u.id = s.user_id
@@ -91,7 +80,6 @@ if ($search !== '') {
         c.name LIKE ?
         OR u.full_name LIKE ?
         OR inv.invoice_number LIKE ?
-        OR inv.payment_mode LIKE ?
         OR CAST(s.id AS CHAR) LIKE ?
         OR REPLACE(UPPER(COALESCE(inv.invoice_number,'')), '-', '') LIKE REPLACE(UPPER(?), '-', '')
         OR EXISTS (
@@ -101,7 +89,6 @@ if ($search !== '') {
               AND (p.name LIKE ? OR p.code LIKE ? OR p.lot_number LIKE ?)
         )
     )";
-    $sales_params[] = $search_like;
     $sales_params[] = $search_like;
     $sales_params[] = $search_like;
     $sales_params[] = $search_like;
@@ -413,7 +400,7 @@ require_once '../../includes/header.php';
                     <span class="input-group-text"><i class="fas fa-search"></i></span>
                     <input type="search" class="form-control form-control-lg" id="reportSearch" name="q"
                            value="<?php echo htmlspecialchars($search); ?>"
-                           placeholder="N° facture, client, produit, lot, caissier, fournisseur, mode de paiement…"
+                           placeholder="N° facture, client, produit, lot, caissier, fournisseur…"
                            autocomplete="off">
                     <?php if ($search !== ''): ?>
                     <a href="?date_from=<?php echo urlencode($date_from); ?>&date_to=<?php echo urlencode($date_to); ?>" class="btn btn-outline-secondary" title="Effacer la recherche">
@@ -526,42 +513,9 @@ require_once '../../includes/header.php';
             </div>
         </section>
 
-        <!-- 2. Paiements -->
+        <!-- 2. Performance caissiers -->
         <section class="rpt-section">
-            <h2 class="rpt-section-title">2. Répartition par mode de paiement</h2>
-            <div class="rpt-table-wrap">
-                <table class="rpt-table">
-                    <thead>
-                        <tr>
-                            <th>Mode</th>
-                            <th class="ctr">Nombre</th>
-                            <th class="num">Montant</th>
-                            <th class="num">Part</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <?php if (count($payment_modes) === 0): ?>
-                        <tr><td colspan="4" class="ctr text-muted">Aucune vente sur la période.</td></tr>
-                        <?php else:
-                            $pay_total = max(0.01, (float)$kpi_sales['ca_ttc']);
-                            foreach ($payment_modes as $pm):
-                                $share = ((float)$pm['total'] / $pay_total) * 100;
-                        ?>
-                        <tr>
-                            <td><?php echo htmlspecialchars($pm['mode']); ?></td>
-                            <td class="ctr"><?php echo (int)$pm['nb']; ?></td>
-                            <td class="num"><?php echo format_currency($pm['total']); ?></td>
-                            <td class="num"><?php echo number_format($share, 1, ',', ' '); ?> %</td>
-                        </tr>
-                        <?php endforeach; endif; ?>
-                    </tbody>
-                </table>
-            </div>
-        </section>
-
-        <!-- 3. Performance caissiers -->
-        <section class="rpt-section">
-            <h2 class="rpt-section-title">3. Performance des caissiers</h2>
+            <h2 class="rpt-section-title">2. Performance des caissiers</h2>
             <div class="rpt-table-wrap">
                 <table class="rpt-table">
                     <thead>
@@ -588,7 +542,7 @@ require_once '../../includes/header.php';
 
         <!-- 4. Détail ventes -->
         <section class="rpt-section">
-            <h2 class="rpt-section-title">4. Détail des ventes & factures (<?php echo count($sales_list); ?>)</h2>
+            <h2 class="rpt-section-title">3. Détail des ventes & factures (<?php echo count($sales_list); ?>)</h2>
             <div class="rpt-table-wrap">
                 <table class="rpt-table">
                     <thead>
@@ -597,7 +551,6 @@ require_once '../../includes/header.php';
                             <th>Date</th>
                             <th>Client</th>
                             <th>Caissier</th>
-                            <th>Paiement</th>
                             <th class="num">Remise</th>
                             <th class="num">TVA</th>
                             <th class="num">Total TTC</th>
@@ -605,7 +558,7 @@ require_once '../../includes/header.php';
                     </thead>
                     <tbody>
                         <?php if (count($sales_list) === 0): ?>
-                        <tr><td colspan="8" class="ctr text-muted">Aucune vente enregistrée.</td></tr>
+                        <tr><td colspan="7" class="ctr text-muted">Aucune vente enregistrée.</td></tr>
                         <?php else: foreach ($sales_list as $s):
                             $inv = !empty($s['invoice_number']) ? $s['invoice_number'] : format_invoice_number($s['id']);
                         ?>
@@ -614,7 +567,6 @@ require_once '../../includes/header.php';
                             <td><?php echo date('d/m/Y H:i', strtotime($s['sale_date'])); ?></td>
                             <td><?php echo htmlspecialchars($s['client_name'] ?? 'Client de passage'); ?></td>
                             <td><?php echo htmlspecialchars($s['cashier'] ?? 'N/A'); ?></td>
-                            <td><?php echo htmlspecialchars($s['payment_mode'] ?? 'Espèces'); ?></td>
                             <td class="num"><?php echo format_currency($s['discount']); ?></td>
                             <td class="num"><?php echo format_currency($s['tax_amount'] ?? 0); ?></td>
                             <td class="num"><?php echo format_currency($s['final_amount']); ?></td>
@@ -627,7 +579,7 @@ require_once '../../includes/header.php';
 
         <!-- 5. Achats -->
         <section class="rpt-section">
-            <h2 class="rpt-section-title">5. Achats fournisseurs (<?php echo count($purchases_list); ?>)</h2>
+            <h2 class="rpt-section-title">4. Achats fournisseurs (<?php echo count($purchases_list); ?>)</h2>
             <div class="rpt-table-wrap">
                 <table class="rpt-table">
                     <thead>
@@ -660,7 +612,7 @@ require_once '../../includes/header.php';
 
         <!-- 6. Top produits -->
         <section class="rpt-section">
-            <h2 class="rpt-section-title">6. Produits les plus vendus</h2>
+            <h2 class="rpt-section-title">5. Produits les plus vendus</h2>
             <div class="rpt-table-wrap">
                 <table class="rpt-table">
                     <thead>
@@ -697,7 +649,7 @@ require_once '../../includes/header.php';
 
         <!-- 7. Catégories -->
         <section class="rpt-section">
-            <h2 class="rpt-section-title">7. Chiffre d'affaires par catégorie</h2>
+            <h2 class="rpt-section-title">6. Chiffre d'affaires par catégorie</h2>
             <div class="rpt-table-wrap">
                 <table class="rpt-table">
                     <thead>
@@ -728,7 +680,7 @@ require_once '../../includes/header.php';
 
         <!-- 8. Clients -->
         <section class="rpt-section">
-            <h2 class="rpt-section-title">8. Meilleurs clients</h2>
+            <h2 class="rpt-section-title">7. Meilleurs clients</h2>
             <div class="rpt-table-wrap">
                 <table class="rpt-table">
                     <thead>
@@ -763,7 +715,7 @@ require_once '../../includes/header.php';
 
         <!-- 9. Stock -->
         <section class="rpt-section">
-            <h2 class="rpt-section-title">9. Alertes de stock (<?php echo count($stock_alerts); ?>)</h2>
+            <h2 class="rpt-section-title">8. Alertes de stock (<?php echo count($stock_alerts); ?>)</h2>
             <div class="rpt-table-wrap">
                 <table class="rpt-table">
                     <thead>
@@ -798,7 +750,7 @@ require_once '../../includes/header.php';
 
         <!-- 10. Péremption -->
         <section class="rpt-section">
-            <h2 class="rpt-section-title">10. Produits à péremption proche (90 jours)</h2>
+            <h2 class="rpt-section-title">9. Produits à péremption proche (90 jours)</h2>
             <div class="rpt-table-wrap">
                 <table class="rpt-table">
                     <thead>

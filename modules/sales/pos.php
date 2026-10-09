@@ -151,20 +151,9 @@ require_once '../../includes/header.php';
                     </select>
                 </div>
 
-                <div class="row g-3 mb-3">
-                    <div class="col-12 col-sm-6">
-                        <label class="form-label fw-bold small text-muted" for="paymentMode">Mode de paiement</label>
-                        <select class="form-select" id="paymentMode">
-                            <option value="Espèces">Espèces</option>
-                            <option value="Mobile Money">Mobile Money</option>
-                            <option value="Carte">Carte bancaire</option>
-                            <option value="Virement">Virement</option>
-                        </select>
-                    </div>
-                    <div class="col-12 col-sm-6">
-                        <label class="form-label fw-bold small text-muted" for="taxRate">TVA (%)</label>
-                        <input type="number" class="form-control" id="taxRate" value="0" min="0" step="0.01">
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-muted" for="taxRate">TVA (%)</label>
+                    <input type="number" class="form-control" id="taxRate" value="0" min="0" step="0.01">
                 </div>
 
                 <div class="mb-3">
@@ -419,7 +408,6 @@ document.getElementById('btnConfirmSale').addEventListener('click', function() {
         total_amount: cart.reduce((sum, item) => sum + (item.price * item.qty), 0),
         discount: parseFloat(document.getElementById('discount').value) || 0,
         client_id: document.getElementById('clientSelect').value,
-        payment_mode: document.getElementById('paymentMode').value,
         tax_rate: parseFloat(document.getElementById('taxRate').value) || 0,
         legal_note: 'Les médicaments vendus ne sont ni repris ni échangés.'
     };
