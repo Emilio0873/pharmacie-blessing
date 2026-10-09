@@ -58,8 +58,8 @@ function bootstrap_schema_if_needed(PDO $pdo): void {
 
 function sync_business_phone(PDO $pdo): void {
     try {
-        $pdo->prepare("UPDATE app_settings SET setting_value = ? WHERE setting_key = 'business_phone' AND setting_value = ?")
-            ->execute(['0965431594', '+243 972 573 971']);
+        $stmt = $pdo->prepare("UPDATE app_settings SET setting_value = ? WHERE setting_key = 'business_phone' AND setting_value IN (?, ?, ?)");
+        $stmt->execute(['0965431594', '+243 972 573 971', '+243 965 431 594', '0965 431 594']);
     } catch (Throwable $e) {
         // settings table may not exist yet
     }
