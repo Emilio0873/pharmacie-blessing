@@ -60,7 +60,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <title>Connexion — Pharmacie Blessing</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="assets/css/logo-anim.css">
     <link rel="stylesheet" href="assets/css/theme.css">
     <style>
@@ -78,19 +77,35 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             justify-content: center;
             padding: 1.25rem;
             font-family: var(--font-body);
+        }
+        html[data-theme="dark"] body {
             background:
                 radial-gradient(circle at 85% 10%, rgba(29, 78, 216, 0.45), transparent 40%),
                 radial-gradient(circle at 10% 90%, rgba(14, 165, 233, 0.18), transparent 35%),
                 linear-gradient(160deg, #0f172a 0%, #020617 55%, #020617 100%);
+            color: #e2e8f0;
+        }
+        html[data-theme="light"] body {
+            background:
+                radial-gradient(circle at 85% 10%, rgba(29, 78, 216, 0.16), transparent 42%),
+                linear-gradient(160deg, #eff6ff 0%, #f8fafc 55%, #f1f5f9 100%);
+            color: #0f172a;
         }
         .login-shell {
             width: 100%;
             max-width: 420px;
+            border-radius: 20px;
+            padding: 2.25rem 2rem;
+        }
+        html[data-theme="dark"] .login-shell {
             background: rgba(11, 18, 32, 0.94);
             border: 1px solid #334155;
-            border-radius: 20px;
             box-shadow: 0 24px 48px rgba(2, 6, 23, 0.45);
-            padding: 2.25rem 2rem;
+        }
+        html[data-theme="light"] .login-shell {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            box-shadow: 0 18px 40px rgba(15, 23, 42, 0.08);
         }
         .login-logo {
             width: 72px;
@@ -107,16 +122,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             font-weight: 800;
             font-size: 1.45rem;
             letter-spacing: -0.03em;
-            color: #dbeafe;
             text-align: center;
             margin: 0;
         }
+        html[data-theme="dark"] .login-title { color: #dbeafe; }
+        html[data-theme="light"] .login-title { color: #1e3a8a; }
         .login-subtitle {
             text-align: center;
-            color: #94a3b8;
             font-size: 0.9rem;
             margin: 0.35rem 0 1.35rem;
         }
+        html[data-theme="dark"] .login-subtitle { color: #94a3b8; }
+        html[data-theme="light"] .login-subtitle { color: #475569; }
         .login-rule {
             height: 3px;
             border-radius: 2px;
@@ -125,9 +142,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         .form-label {
             font-weight: 600;
-            color: #cbd5e1;
             font-size: 0.875rem;
         }
+        html[data-theme="dark"] .form-label { color: #cbd5e1; }
+        html[data-theme="light"] .form-label { color: #334155; }
         .form-control {
             border-radius: 10px;
             border: 1px solid #475569;
@@ -206,11 +224,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         .back-link {
             display: inline-block;
             margin-top: 1rem;
-            color: #93c5fd;
             text-decoration: none;
             font-size: 0.88rem;
         }
-        .back-link:hover { color: #bfdbfe; }
+        html[data-theme="dark"] .back-link { color: #93c5fd; }
+        html[data-theme="dark"] .back-link:hover { color: #bfdbfe; }
+        html[data-theme="light"] .back-link { color: #1d4ed8; }
+        html[data-theme="light"] .back-link:hover { color: #1e3a8a; }
         .alert { border-radius: 10px; font-size: 0.875rem; }
         @media (max-width: 400px) {
             .login-shell { padding: 1.5rem 1.15rem; }
@@ -219,7 +239,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
-<div class="d-flex justify-content-center pt-3"><?php render_theme_switch(); ?></div>
 <div class="login-shell">
     <img src="assets/img/pha.jpeg" alt="Pharmacie Blessing" class="login-logo logo-clock">
     <h1 class="login-title">Pharmacie Blessing</h1>
