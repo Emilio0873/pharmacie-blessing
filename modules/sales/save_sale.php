@@ -23,6 +23,8 @@ if (!$data || empty($data['cart'])) {
 try {
     // Must run BEFORE the transaction: CREATE TABLE causes an implicit commit in MySQL.
     ensure_invoicing_tables($pdo);
+    ensure_delivery_status_column($pdo);
+    ensure_sale_fulfillment_columns($pdo);
 
     $pdo->beginTransaction();
 
@@ -55,7 +57,8 @@ try {
         }
     }
 
-    $stmt = $pdo->prepare("INSERT INTO sales (client_id, user_id, total_amount, discount, final_amount) VALUES (?, ?, ?, ?, ?)");
+    $stmt = $pdo->prepare("INSERT INTO sales (client_id, user_id, total_amount, discount, final_amount, delivery_status, fulfillment_type)
+        VALUES (?, ?, ?, ?, ?, 'a_preparer', 'retrait_depot')");
     $stmt->execute([$client_id, $user_id, $subtotal, $discount, $final_amount]);
     $sale_id = (int)$pdo->lastInsertId();
 

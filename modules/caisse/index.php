@@ -6,9 +6,58 @@ require_once '../../includes/functions.php';
 if (!is_logged_in()) redirect('../../index.php');
 authorize(['Super Admin', 'Admin', 'Caissier']);
 
+ensure_counter_order_tables($pdo);
+ensure_delivery_status_column($pdo);
+ensure_sale_fulfillment_columns($pdo);
+ensure_invoicing_tables($pdo);
+
+$flash_ok = '';
+$flash_err = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['pay_order_id']) && csrf_valid()) {
+    $orderId = (int)$_POST['pay_order_id'];
+    try {
+        $pdo->beginTransaction();
+        $stmt = $pdo->prepare("SELECT * FROM counter_orders WHERE id = ? FOR UPDATE");
+        $stmt->execute([$orderId]);
+        $order = $stmt->fetch();
+        if (!$order || $order['status'] !== 'en_caisse') {
+            throw new Exception('Cette commande n’est plus en attente de paiement.');
+        }
+        $items = $pdo->prepare("SELECT * FROM counter_order_items WHERE order_id = ?");
+        $items->execute([$orderId]);
+        $lines = $items->fetchAll();
+        $clientId = find_or_create_client($pdo, $order['client_name'], $order['phone'], $order['email'] ?? null, $order['address'] ?? null);
+        $result = create_paid_sale_from_lines($pdo, $lines, [
+            'client_id' => $clientId,
+            'user_id' => (int)$_SESSION['user_id'],
+            'subtotal' => (float)$order['subtotal'],
+            'fulfillment_type' => $order['fulfillment_type'] ?? 'retrait_depot',
+            'geo_lat' => $order['geo_lat'] ?? null,
+            'geo_lng' => $order['geo_lng'] ?? null,
+            'stock_note' => 'Commande ' . $order['reference'],
+        ]);
+        $upd = $pdo->prepare("UPDATE counter_orders SET status = 'payee', sale_id = ? WHERE id = ? AND status = 'en_caisse'");
+        $upd->execute([$result['sale_id'], $orderId]);
+        if ($upd->rowCount() === 0) {
+            throw new Exception('Paiement déjà traité.');
+        }
+        log_activity($pdo, (int)$_SESSION['user_id'], 'Paiement caisse', "{$order['reference']} → vente #{$result['sale_id']}");
+        $pdo->commit();
+        $flash_ok = "Paiement validé. Facture {$result['invoice_number']} envoyée au livreur.";
+        $view = 'pending';
+    } catch (Exception $e) {
+        if ($pdo->inTransaction()) $pdo->rollBack();
+        $flash_err = $e->getMessage();
+        $view = 'pending';
+    }
+}
+
 $selected_year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
 $selected_month = isset($_GET['month']) ? (int)$_GET['month'] : date('m');
-$view = isset($_GET['view']) ? $_GET['view'] : 'dashboard'; // dashboard, sales, purchases
+if (!isset($view)) {
+    $view = isset($_GET['view']) ? $_GET['view'] : 'dashboard'; // dashboard, sales, purchases, pending
+}
 
 // ──────────────────────────────────────────────────
 // PERIOD ANALYTICS HELPER
@@ -213,10 +262,16 @@ require_once '../../includes/header.php';
     </div>
 </div>
 
+<?php if ($flash_ok): ?><div class="alert alert-success"><?php echo htmlspecialchars($flash_ok); ?></div><?php endif; ?>
+<?php if ($flash_err): ?><div class="alert alert-danger"><?php echo htmlspecialchars($flash_err); ?></div><?php endif; ?>
+
 <!-- NAVIGATION TABS -->
 <ul class="nav nav-pills mb-4 d-print-none p-2 rounded shadow-sm border">
     <li class="nav-item">
         <a class="nav-link <?php echo $view == 'dashboard' ? 'active' : ''; ?>" href="?view=dashboard&year=<?php echo $selected_year; ?>&month=<?php echo $selected_month; ?>"><i class="fas fa-tachometer-alt me-2"></i>Vue Générale</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link <?php echo $view == 'pending' ? 'active' : ''; ?>" href="?view=pending&year=<?php echo $selected_year; ?>&month=<?php echo $selected_month; ?>"><i class="fas fa-cash-register me-2"></i>À encaisser</a>
     </li>
     <li class="nav-item">
         <a class="nav-link <?php echo $view == 'sales' ? 'active' : ''; ?>" href="?view=sales&year=<?php echo $selected_year; ?>&month=<?php echo $selected_month; ?>"><i class="fas fa-file-invoice-dollar me-2"></i>Factures de Vente</a>
@@ -285,6 +340,61 @@ require_once '../../includes/header.php';
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+
+<?php elseif ($view == 'pending'): ?>
+    <?php
+    $pendingOrders = $pdo->query(
+        "SELECT o.*,
+                (SELECT COUNT(*) FROM counter_order_items i WHERE i.order_id = o.id) AS line_count
+         FROM counter_orders o
+         WHERE o.status = 'en_caisse'
+         ORDER BY o.created_at ASC"
+    )->fetchAll();
+    ?>
+    <div class="card border-0 shadow-sm">
+        <div class="card-header border-0 py-3">
+            <h5 class="fw-bold mb-0">Commandes à encaisser (envoyées par le facturier)</h5>
+            <p class="text-muted small mb-0">Après validation, le stock est sorti et la commande part chez le livreur (livraison ou retrait).</p>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="bg-light">
+                        <tr>
+                            <th class="ps-4">Référence</th>
+                            <th>Client</th>
+                            <th>Mode</th>
+                            <th>Montant</th>
+                            <th class="text-end pe-4">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php if (!$pendingOrders): ?>
+                            <tr><td colspan="5" class="text-center py-5 text-muted">Aucune commande en attente de paiement.</td></tr>
+                        <?php else: foreach ($pendingOrders as $order): ?>
+                            <tr>
+                                <td class="ps-4 fw-bold text-primary"><?php echo htmlspecialchars($order['reference']); ?></td>
+                                <td>
+                                    <?php echo htmlspecialchars($order['client_name']); ?>
+                                    <div class="small text-muted"><?php echo htmlspecialchars($order['phone']); ?></div>
+                                </td>
+                                <td><?php echo $order['fulfillment_type'] === 'livraison_domicile' ? 'Livraison' : 'Retrait'; ?></td>
+                                <td class="fw-bold text-success"><?php echo format_currency($order['subtotal']); ?></td>
+                                <td class="text-end pe-4">
+                                    <a href="../facturation/view.php?id=<?php echo (int)$order['id']; ?>" class="btn btn-sm btn-outline-secondary">Détail</a>
+                                    <form method="post" class="d-inline" onsubmit="return confirm('Confirmer le paiement et envoyer au livreur ?');">
+                                        <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrf_token()); ?>">
+                                        <input type="hidden" name="pay_order_id" value="<?php echo (int)$order['id']; ?>">
+                                        <button class="btn btn-sm btn-success">Valider le paiement</button>
+                                    </form>
+                                </td>
+                            </tr>
+                        <?php endforeach; endif; ?>
+                    </tbody>
+                </table>
             </div>
         </div>
     </div>

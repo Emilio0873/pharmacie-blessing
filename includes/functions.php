@@ -55,7 +55,7 @@ function home_path_for_role($role = null) {
     return match ($role) {
         'Caissier' => 'modules/caisse/index.php',
         'Gérant' => 'modules/products/index.php',
-        'Facturier' => 'modules/sales/reservations.php',
+        'Facturier' => 'modules/facturation/index.php',
         'Livreur' => 'modules/livraisons/index.php',
         default => 'dashboard.php',
     };
@@ -379,7 +379,128 @@ function format_reservation_number($id) {
     return 'RES-' . str_pad((int)$id, 6, '0', STR_PAD_LEFT);
 }
 
+function format_counter_order_number($id) {
+    return 'CMD-' . str_pad((int)$id, 6, '0', STR_PAD_LEFT);
+}
+
 function reservation_phone_key($phone) {
     return preg_replace('/\D+/', '', (string)$phone);
+}
+
+function find_or_create_client($pdo, $name, $phone, $email = null, $address = null) {
+    $find = $pdo->prepare("SELECT id FROM clients WHERE phone = ? LIMIT 1");
+    $find->execute([$phone]);
+    $id = $find->fetchColumn();
+    if ($id) {
+        return (int)$id;
+    }
+    $pdo->prepare("INSERT INTO clients (name, phone, email, address) VALUES (?, ?, ?, ?)")
+        ->execute([$name, $phone, $email ?: null, $address ?: null]);
+    return (int)$pdo->lastInsertId();
+}
+
+/**
+ * Create a paid sale + invoice + stock movements from cart lines.
+ * Expects to run inside an open transaction.
+ */
+function create_paid_sale_from_lines(PDO $pdo, array $lines, array $meta) {
+    ensure_invoicing_tables($pdo);
+    ensure_delivery_status_column($pdo);
+    ensure_sale_fulfillment_columns($pdo);
+
+    if (empty($lines)) {
+        throw new Exception('Aucun produit à encaisser.');
+    }
+
+    foreach ($lines as $item) {
+        $productId = (int)$item['product_id'];
+        $qty = (int)$item['qty'];
+        $check = $pdo->prepare("SELECT name, qty FROM products WHERE id = ? FOR UPDATE");
+        $check->execute([$productId]);
+        $product = $check->fetch();
+        if (!$product) {
+            throw new Exception('Produit introuvable : ' . ($item['product_name'] ?? "#$productId"));
+        }
+        if ((int)$product['qty'] < $qty) {
+            throw new Exception("Stock insuffisant pour « {$product['name']} » (dispo: {$product['qty']}).");
+        }
+    }
+
+    $clientId = !empty($meta['client_id']) ? (int)$meta['client_id'] : null;
+    $userId = (int)$meta['user_id'];
+    $subtotal = (float)$meta['subtotal'];
+    $discount = (float)($meta['discount'] ?? 0);
+    $final = max(0, $subtotal - $discount);
+    $fulfillment = ($meta['fulfillment_type'] ?? 'retrait_depot') === 'livraison_domicile' ? 'livraison_domicile' : 'retrait_depot';
+    $geoLat = isset($meta['geo_lat']) && $meta['geo_lat'] !== '' && $meta['geo_lat'] !== null ? (float)$meta['geo_lat'] : null;
+    $geoLng = isset($meta['geo_lng']) && $meta['geo_lng'] !== '' && $meta['geo_lng'] !== null ? (float)$meta['geo_lng'] : null;
+    $deliveryNote = $meta['stock_note'] ?? 'Vente';
+    $initialDelivery = $fulfillment === 'livraison_domicile' ? 'a_preparer' : 'a_preparer';
+
+    $pdo->prepare("INSERT INTO sales
+        (client_id, user_id, total_amount, discount, final_amount, delivery_status, fulfillment_type, geo_lat, geo_lng)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)")
+        ->execute([$clientId, $userId, $subtotal, $discount, $final, $initialDelivery, $fulfillment, $geoLat, $geoLng]);
+    $saleId = (int)$pdo->lastInsertId();
+
+    foreach ($lines as $item) {
+        $productId = (int)$item['product_id'];
+        $qty = (int)$item['qty'];
+        $price = (float)$item['unit_price'];
+        $pdo->prepare("INSERT INTO sale_details (sale_id, product_id, qty, unit_price) VALUES (?, ?, ?, ?)")
+            ->execute([$saleId, $productId, $qty, $price]);
+        $stock = $pdo->prepare("UPDATE products SET qty = qty - ? WHERE id = ? AND qty >= ?");
+        $stock->execute([$qty, $productId, $qty]);
+        if ($stock->rowCount() === 0) {
+            throw new Exception('Stock insuffisant pour « ' . ($item['product_name'] ?? "#$productId") . ' ».');
+        }
+        $pdo->prepare("INSERT INTO stock_movements (product_id, type, qty, user_id, reference_id, notes)
+            VALUES (?, 'OUT', ?, ?, ?, ?)")
+            ->execute([$productId, $qty, $userId, $saleId, $deliveryNote]);
+    }
+
+    $invoiceNumber = format_invoice_number($saleId);
+    $pdo->prepare("INSERT INTO invoices
+        (sale_id, invoice_number, client_id, user_id, subtotal, discount, tax_rate, tax_amount, total_amount, payment_mode, legal_note)
+        VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?, 'Espèces', ?)")
+        ->execute([
+            $saleId,
+            $invoiceNumber,
+            $clientId,
+            $userId,
+            $subtotal,
+            $discount,
+            $final,
+            'Les médicaments vendus ne sont ni repris ni échangés.',
+        ]);
+    $invoiceId = (int)$pdo->lastInsertId();
+
+    $lineStmt = $pdo->prepare("INSERT INTO invoice_items
+        (invoice_id, product_id, product_name, product_code, qty, unit_price, line_discount, line_tax, line_total)
+        VALUES (?, ?, ?, ?, ?, ?, 0, 0, ?)");
+    foreach ($lines as $item) {
+        $lineStmt->execute([
+            $invoiceId,
+            (int)$item['product_id'],
+            $item['product_name'],
+            $item['product_code'] ?? null,
+            (int)$item['qty'],
+            (float)$item['unit_price'],
+            (float)$item['line_total'],
+        ]);
+    }
+
+    return [
+        'sale_id' => $saleId,
+        'invoice_number' => $invoiceNumber,
+        'final_amount' => $final,
+    ];
+}
+
+function maps_url($lat, $lng) {
+    if ($lat === null || $lng === null || $lat === '' || $lng === '') {
+        return null;
+    }
+    return 'https://www.google.com/maps?q=' . rawurlencode((float)$lat . ',' . (float)$lng);
 }
 ?>

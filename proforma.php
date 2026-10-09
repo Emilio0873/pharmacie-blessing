@@ -75,7 +75,8 @@ render_public_chrome_start('Facture pro forma — Pharmacie Blessing');
                     <div class="text-md-end">
                         <div class="proforma-ref"><?php echo htmlspecialchars($reservation['reference']); ?></div>
                         <div>Émise le <?php echo date('d/m/Y H:i', strtotime($reservation['created_at'])); ?></div>
-                        <div>Retrait prévu le <?php echo date('d/m/Y', strtotime($reservation['pickup_date'])); ?></div>
+                        <?php $isDelivery = ($reservation['fulfillment_type'] ?? '') === 'livraison_domicile'; ?>
+                        <div><?php echo $isDelivery ? 'Livraison' : 'Retrait'; ?> prévu le <?php echo date('d/m/Y', strtotime($reservation['pickup_date'])); ?></div>
                     </div>
                 </header>
                 <section class="proforma-client">
@@ -85,6 +86,12 @@ render_public_chrome_start('Facture pro forma — Pharmacie Blessing');
                         Tél : <?php echo htmlspecialchars($reservation['phone']); ?>
                         <?php if (!empty($reservation['email'])): ?><br>E-mail : <?php echo htmlspecialchars($reservation['email']); ?><?php endif; ?>
                         <?php if (!empty($reservation['address'])): ?><br><?php echo htmlspecialchars($reservation['address']); ?><?php endif; ?>
+                        <br>Mode : <?php echo $isDelivery ? 'Livraison à domicile' : 'Retrait au dépôt'; ?>
+                        <?php
+                        $mapLink = maps_url($reservation['geo_lat'] ?? null, $reservation['geo_lng'] ?? null);
+                        if ($mapLink): ?>
+                            <br><a href="<?php echo htmlspecialchars($mapLink); ?>" target="_blank" rel="noopener">Position GPS</a>
+                        <?php endif; ?>
                     </p>
                 </section>
                 <table class="proforma-table">

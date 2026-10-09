@@ -49,6 +49,18 @@
 
         <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Caissier') || has_role('Facturier')): ?>
         <li class="sidebar-label px-3 pt-3 pb-2 text-uppercase fw-bold">Ventes</li>
+        <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Facturier')): ?>
+        <li class="mb-2">
+            <a href="<?php echo $base_url; ?>/modules/facturation/create.php" class="nav-link p-3 rounded fw-bold <?php echo strpos($_SERVER['PHP_SELF'], '/modules/facturation/') !== false ? 'active' : ''; ?>">
+                Commande comptoir
+            </a>
+        </li>
+        <li class="mb-2">
+            <a href="<?php echo $base_url; ?>/modules/facturation/index.php" class="nav-link p-3 rounded">
+                Suivi facturier
+            </a>
+        </li>
+        <?php endif; ?>
         <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Caissier') || has_role('Facturier')): ?>
         <li class="mb-2">
             <a href="<?php echo $base_url; ?>/modules/sales/index.php" class="nav-link p-3 rounded">

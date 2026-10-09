@@ -32,7 +32,8 @@ require_once '../../includes/header.php';
                         <th class="ps-4">Référence</th>
                         <th>Client</th>
                         <th>Téléphone</th>
-                        <th>Retrait prévu</th>
+                        <th>Date prévue</th>
+                        <th>Mode</th>
                         <th>Produits</th>
                         <th>Montant</th>
                         <th>Statut</th>
@@ -42,7 +43,7 @@ require_once '../../includes/header.php';
                 <tbody>
                     <?php if (count($reservations) === 0): ?>
                         <tr>
-                            <td colspan="8" class="text-center py-5 text-muted">Aucune réservation en ligne.</td>
+                            <td colspan="9" class="text-center py-5 text-muted">Aucune réservation en ligne.</td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($reservations as $reservation): ?>
@@ -52,6 +53,7 @@ require_once '../../includes/header.php';
                                 <td><?php echo htmlspecialchars($reservation['last_name'] . ' ' . $reservation['first_name']); ?></td>
                                 <td><?php echo htmlspecialchars($reservation['phone']); ?></td>
                                 <td><?php echo date('d/m/Y', strtotime($reservation['pickup_date'])); ?></td>
+                                <td><?php echo (($reservation['fulfillment_type'] ?? '') === 'livraison_domicile') ? 'Livraison' : 'Retrait'; ?></td>
                                 <td><?php echo (int)$reservation['line_count']; ?></td>
                                 <td class="fw-bold"><?php echo format_currency($reservation['subtotal']); ?></td>
                                 <td>

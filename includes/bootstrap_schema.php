@@ -20,8 +20,10 @@ function bootstrap_schema_if_needed(PDO $pdo): void {
         seed_default_categories($pdo);
         sync_business_phone($pdo);
         ensure_reservation_tables($pdo);
+        ensure_counter_order_tables($pdo);
         ensure_app_roles($pdo);
         ensure_delivery_status_column($pdo);
+        ensure_sale_fulfillment_columns($pdo);
         return;
     }
 
@@ -58,8 +60,10 @@ function bootstrap_schema_if_needed(PDO $pdo): void {
     seed_default_categories($pdo);
     sync_business_phone($pdo);
     ensure_reservation_tables($pdo);
+    ensure_counter_order_tables($pdo);
     ensure_app_roles($pdo);
     ensure_delivery_status_column($pdo);
+    ensure_sale_fulfillment_columns($pdo);
 }
 
 function ensure_app_roles(PDO $pdo): void {
@@ -98,6 +102,60 @@ function ensure_delivery_status_column(PDO $pdo): void {
     }
 }
 
+function ensure_column(PDO $pdo, string $table, string $column, string $definition): void {
+    try {
+        $pdo->query("SELECT `$column` FROM `$table` LIMIT 1");
+    } catch (Throwable $e) {
+        try {
+            $pdo->exec("ALTER TABLE `$table` ADD COLUMN $definition");
+        } catch (Throwable $e2) {
+            // ignore
+        }
+    }
+}
+
+function ensure_sale_fulfillment_columns(PDO $pdo): void {
+    ensure_column($pdo, 'sales', 'fulfillment_type', "fulfillment_type VARCHAR(40) NOT NULL DEFAULT 'retrait_depot'");
+    ensure_column($pdo, 'sales', 'geo_lat', 'geo_lat DECIMAL(10,7) NULL');
+    ensure_column($pdo, 'sales', 'geo_lng', 'geo_lng DECIMAL(10,7) NULL');
+}
+
+function ensure_counter_order_tables(PDO $pdo): void {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS counter_orders (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        reference VARCHAR(30) NOT NULL UNIQUE,
+        client_name VARCHAR(200) NOT NULL,
+        phone VARCHAR(30) NOT NULL,
+        email VARCHAR(150) NULL,
+        address VARCHAR(255) NULL,
+        fulfillment_type VARCHAR(40) NOT NULL DEFAULT 'retrait_depot',
+        geo_lat DECIMAL(10,7) NULL,
+        geo_lng DECIMAL(10,7) NULL,
+        pickup_date DATE NULL,
+        status VARCHAR(40) NOT NULL DEFAULT 'en_caisse',
+        subtotal DECIMAL(12,2) NOT NULL DEFAULT 0,
+        created_by INT NULL,
+        sale_id INT NULL,
+        notes VARCHAR(255) NULL,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_counter_orders_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS counter_order_items (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        order_id INT NOT NULL,
+        product_id INT NOT NULL,
+        product_name VARCHAR(255) NOT NULL,
+        product_code VARCHAR(100) NULL,
+        qty INT NOT NULL,
+        unit_price DECIMAL(12,2) NOT NULL DEFAULT 0,
+        line_total DECIMAL(12,2) NOT NULL DEFAULT 0,
+        INDEX idx_counter_order_items_order (order_id),
+        CONSTRAINT fk_counter_order_items_order FOREIGN KEY (order_id) REFERENCES counter_orders(id)
+            ON UPDATE CASCADE ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+}
+
 function ensure_reservation_tables(PDO $pdo): void {
     $pdo->exec("CREATE TABLE IF NOT EXISTS reservations (
         id INT AUTO_INCREMENT PRIMARY KEY,
@@ -130,15 +188,10 @@ function ensure_reservation_tables(PDO $pdo): void {
             ON UPDATE CASCADE ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 
-    try {
-        $pdo->query("SELECT sale_id FROM reservations LIMIT 1");
-    } catch (Throwable $e) {
-        try {
-            $pdo->exec("ALTER TABLE reservations ADD COLUMN sale_id INT NULL");
-        } catch (Throwable $e2) {
-            // ignore
-        }
-    }
+    ensure_column($pdo, 'reservations', 'sale_id', 'sale_id INT NULL');
+    ensure_column($pdo, 'reservations', 'fulfillment_type', "fulfillment_type VARCHAR(40) NOT NULL DEFAULT 'retrait_depot'");
+    ensure_column($pdo, 'reservations', 'geo_lat', 'geo_lat DECIMAL(10,7) NULL');
+    ensure_column($pdo, 'reservations', 'geo_lng', 'geo_lng DECIMAL(10,7) NULL');
 }
 
 function sync_business_phone(PDO $pdo): void {
