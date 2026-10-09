@@ -49,7 +49,37 @@ $featuredProducts = $pdo->query(
         <p class="hero-lead">Médicaments de qualité, conseils professionnels et stock suivi en temps réel.</p>
         <div class="hero-actions">
             <a href="reservation.php" class="btn-hero btn-hero-primary">Réserver une commande</a>
-            <a href="client_register.php" class="btn-hero btn-hero-ghost">Créer mon compte</a>
+            <a href="#espace-client" class="btn-hero btn-hero-ghost">Espace client</a>
+        </div>
+    </div>
+</section>
+
+<section id="espace-client" class="section section-account">
+    <div class="container">
+        <div class="section-head is-center reveal">
+            <span class="section-kicker">Compte client en ligne</span>
+            <h2 class="section-title">Créer un compte, se connecter, mon espace</h2>
+            <p class="section-text">Ouvrez votre compte Pharmacie Blessing pour suivre vos réservations et vos factures.</p>
+        </div>
+        <div class="account-grid">
+            <a href="client_register.php" class="account-card reveal">
+                <div class="account-icon"><i class="fa-solid fa-user-plus"></i></div>
+                <h3>Créer un compte</h3>
+                <p>Inscrivez-vous avec votre nom, e-mail et téléphone.</p>
+                <span class="account-cta">S’inscrire →</span>
+            </a>
+            <a href="client_login.php" class="account-card reveal reveal-delay-1">
+                <div class="account-icon"><i class="fa-solid fa-right-to-bracket"></i></div>
+                <h3>Se connecter</h3>
+                <p>Accédez à votre compte client déjà créé.</p>
+                <span class="account-cta">Connexion →</span>
+            </a>
+            <a href="<?php echo !empty($_SESSION['client_account_id']) ? 'client_espace.php' : 'client_login.php'; ?>" class="account-card reveal reveal-delay-2">
+                <div class="account-icon"><i class="fa-solid fa-house-user"></i></div>
+                <h3>Mon espace</h3>
+                <p>Réservations, factures et suivi de vos commandes.</p>
+                <span class="account-cta">Ouvrir →</span>
+            </a>
         </div>
     </div>
 </section>
@@ -217,10 +247,18 @@ $featuredProducts = $pdo->query(
                 <div class="footer-brand">Pharmacie Blessing</div>
                 <p class="mb-0" style="max-width: 34rem;">Dépôt pharmaceutique — qualité, traçabilité et service de proximité.</p>
             </div>
-            <div class="col-md-5 text-md-end footer-social">
-                <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>
-                <a href="#" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
-                <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+            <div class="col-md-5 text-md-end">
+                <div class="footer-account-links mb-3">
+                    <a href="client_register.php">Créer un compte</a>
+                    <a href="client_login.php">Se connecter</a>
+                    <a href="client_espace.php">Mon espace</a>
+                    <a href="login.php">Accès personnel</a>
+                </div>
+                <div class="footer-social">
+                    <a href="#" aria-label="Facebook"><i class="fa-brands fa-facebook"></i></a>
+                    <a href="#" aria-label="WhatsApp"><i class="fa-brands fa-whatsapp"></i></a>
+                    <a href="#" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+                </div>
             </div>
         </div>
         <div class="footer-copy">© <?php echo date('Y'); ?> Pharmacie Blessing. Tous droits réservés.</div>

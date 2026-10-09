@@ -33,6 +33,8 @@ function render_public_chrome_start($title) {
 
 function render_public_nav() {
     $self = basename($_SERVER['SCRIPT_NAME'] ?? '');
+    $clientLogged = !empty($_SESSION['client_account_id']);
+    $accountPages = ['client_espace.php', 'client_login.php', 'client_register.php', 'client_logout.php'];
     ?>
 <nav class="navbar navbar-expand-lg public-nav">
     <div class="container py-2">
@@ -44,20 +46,30 @@ function render_public_nav() {
             <i class="fa-solid fa-bars-staggered text-primary"></i>
         </button>
         <div class="collapse navbar-collapse" id="navContent">
-            <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-3">
+            <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-2 gap-xl-3">
                 <li class="nav-item"><a class="nav-link" href="<?php echo public_anchor('accueil'); ?>">Accueil</a></li>
                 <li class="nav-item"><a class="nav-link" href="<?php echo public_anchor('mission'); ?>">Mission</a></li>
                 <li class="nav-item"><a class="nav-link" href="<?php echo public_anchor('produits'); ?>">Médicaments</a></li>
                 <li class="nav-item"><a class="nav-link<?php echo $self === 'reservation.php' ? ' active' : ''; ?>" href="reservation.php">Réserver</a></li>
-                <li class="nav-item"><a class="nav-link<?php echo in_array($self, ['client_espace.php', 'client_login.php', 'client_register.php'], true) ? ' active' : ''; ?>" href="<?php echo !empty($_SESSION['client_account_id']) ? 'client_espace.php' : 'client_login.php'; ?>">Mon compte</a></li>
+                <li class="nav-item"><a class="nav-link" href="<?php echo public_anchor('espace-client'); ?>">Espace client</a></li>
                 <li class="nav-item"><a class="nav-link" href="<?php echo public_anchor('contact'); ?>">Contact</a></li>
             </ul>
             <?php render_theme_switch(); ?>
-            <?php if (!empty($_SESSION['client_account_id'])): ?>
-                <a href="client_espace.php" class="btn-nav-login"><i class="fa-solid fa-user"></i> Espace client</a>
-            <?php else: ?>
-                <a href="client_register.php" class="btn-nav-login"><i class="fa-solid fa-user-plus"></i> Créer un compte</a>
-            <?php endif; ?>
+            <div class="nav-account-actions d-flex flex-wrap align-items-center gap-2 ms-lg-2 mt-3 mt-lg-0">
+                <?php if ($clientLogged): ?>
+                    <a href="client_espace.php" class="btn-nav-login<?php echo in_array($self, $accountPages, true) ? ' is-active' : ''; ?>">
+                        <i class="fa-solid fa-user"></i> Mon espace
+                    </a>
+                    <a href="client_logout.php" class="btn-nav-ghost">Déconnexion</a>
+                <?php else: ?>
+                    <a href="client_login.php" class="btn-nav-ghost<?php echo $self === 'client_login.php' ? ' is-active' : ''; ?>">
+                        <i class="fa-solid fa-right-to-bracket"></i> Se connecter
+                    </a>
+                    <a href="client_register.php" class="btn-nav-login<?php echo $self === 'client_register.php' ? ' is-active' : ''; ?>">
+                        <i class="fa-solid fa-user-plus"></i> Créer un compte
+                    </a>
+                <?php endif; ?>
+            </div>
         </div>
     </div>
 </nav>

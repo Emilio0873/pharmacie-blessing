@@ -100,6 +100,123 @@ img {
     color: var(--pb-white) !important;
 }
 
+.btn-nav-ghost {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+    background: transparent;
+    color: var(--pb-blue-deep) !important;
+    border: 1.5px solid rgba(29, 78, 216, 0.35);
+    border-radius: 999px;
+    padding: 0.5rem 1.1rem;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-decoration: none;
+    transition: background 0.2s ease, border-color 0.2s ease;
+}
+
+.btn-nav-ghost:hover,
+.btn-nav-ghost.is-active {
+    background: rgba(29, 78, 216, 0.08);
+    border-color: var(--pb-blue);
+    color: var(--pb-blue) !important;
+}
+
+.nav-account-actions {
+    flex-shrink: 0;
+}
+
+.section-account {
+    background:
+        radial-gradient(ellipse 70% 60% at 10% 20%, rgba(29, 78, 216, 0.08), transparent 55%),
+        linear-gradient(180deg, #fff 0%, #f8fafc 100%);
+}
+
+.account-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1.25rem;
+    margin-top: 0.5rem;
+}
+
+.account-card {
+    display: block;
+    text-decoration: none;
+    color: inherit;
+    background: #fff;
+    border: 1px solid var(--pb-line);
+    border-radius: 18px;
+    padding: 1.5rem 1.35rem;
+    box-shadow: 0 10px 30px rgba(15, 23, 42, 0.05);
+    transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.account-card:hover {
+    transform: translateY(-4px);
+    border-color: rgba(29, 78, 216, 0.35);
+    box-shadow: 0 16px 36px rgba(29, 78, 216, 0.12);
+    color: inherit;
+}
+
+.account-icon {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(29, 78, 216, 0.12), rgba(14, 165, 233, 0.12));
+    color: var(--pb-blue);
+    font-size: 1.25rem;
+    margin-bottom: 1rem;
+}
+
+.account-card h3 {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.2rem;
+    margin: 0 0 0.45rem;
+    color: var(--pb-blue-deep);
+}
+
+.account-card p {
+    margin: 0 0 1rem;
+    color: var(--pb-muted);
+    line-height: 1.5;
+}
+
+.account-cta {
+    font-weight: 700;
+    color: var(--pb-blue);
+}
+
+.footer-account-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.1rem;
+    justify-content: flex-end;
+}
+
+.footer-account-links a {
+    color: #cbd5e1;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.92rem;
+}
+
+.footer-account-links a:hover {
+    color: #fff;
+}
+
+@media (max-width: 991px) {
+    .account-grid {
+        grid-template-columns: 1fr;
+    }
+    .footer-account-links {
+        justify-content: flex-start;
+    }
+}
+
 .nav-logo {
     width: 40px;
     height: 40px;
