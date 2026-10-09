@@ -1,6 +1,7 @@
 <?php
 require_once __DIR__ . '/../config/db.php';
 require_once __DIR__ . '/functions.php';
+require_once __DIR__ . '/ui_shell.php';
 
 if (!is_logged_in()) {
     redirect('index.php');
@@ -11,6 +12,10 @@ if (!is_logged_in()) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1d4ed8">
+    <link rel="manifest" href="<?php echo app_base_url('manifest.webmanifest'); ?>">
+    <link rel="apple-touch-icon" href="<?php echo app_base_url('assets/img/pha.jpeg'); ?>">
+    <?php render_theme_boot(rtrim(app_base_url(), '/')); ?>
     <title><?php echo isset($page_title) ? $page_title : 'PHARMACIE BLESSING'; ?></title>
     
     <!-- Bootstrap 5 -->
@@ -21,6 +26,7 @@ if (!is_logged_in()) {
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Custom CSS -->
     <link href="<?php echo app_base_url('assets/css/style.css'); ?>" rel="stylesheet">
+    <link href="<?php echo app_base_url('assets/css/theme.css'); ?>" rel="stylesheet">
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
@@ -45,6 +51,7 @@ if (!is_logged_in()) {
                     </a>
 
                     <div class="ms-auto d-flex align-items-center gap-2 gap-md-3">
+                        <?php render_theme_switch(); ?>
                         <!-- Notifications -->
                         <?php 
                         $notifs = get_notifications($pdo);

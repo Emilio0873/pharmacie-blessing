@@ -1,6 +1,7 @@
 <?php
 require_once 'config/db.php';
 require_once 'includes/functions.php';
+require_once 'includes/ui_shell.php';
 
 $featuredProducts = $pdo->query(
     "SELECT p.*, c.name as category_name
@@ -16,12 +17,19 @@ $featuredProducts = $pdo->query(
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1d4ed8">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-title" content="Blessing">
+    <link rel="manifest" href="<?php echo app_base_url('manifest.webmanifest'); ?>">
+    <link rel="apple-touch-icon" href="<?php echo app_base_url('assets/img/pha.jpeg'); ?>">
+    <?php render_theme_boot(rtrim(app_base_url(), '/')); ?>
     <title>Pharmacie Blessing — Dépôt de référence</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="assets/css/logo-anim.css">
     <link rel="stylesheet" href="assets/css/public.css">
+    <link rel="stylesheet" href="assets/css/theme.css">
 </head>
 <body class="public-body">
 
@@ -41,6 +49,7 @@ $featuredProducts = $pdo->query(
                 <li class="nav-item"><a class="nav-link" href="#produits">Médicaments</a></li>
                 <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
             </ul>
+            <?php render_theme_switch(); ?>
             <a href="login.php" class="btn-nav-login"><i class="fa-solid fa-right-to-bracket"></i> Se connecter</a>
         </div>
     </div>
@@ -207,5 +216,6 @@ $featuredProducts = $pdo->query(
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="assets/js/public.js"></script>
+<script src="assets/js/theme.js"></script>
 </body>
 </html>

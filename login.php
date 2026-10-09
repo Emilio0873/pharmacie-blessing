@@ -1,6 +1,7 @@
 <?php
 require_once 'config/db.php';
 require_once 'includes/functions.php';
+require_once 'includes/ui_shell.php';
 
 if (is_logged_in()) {
     if ($_SESSION['role'] === 'Caissier') {
@@ -52,10 +53,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#1d4ed8">
+    <link rel="manifest" href="<?php echo app_base_url('manifest.webmanifest'); ?>">
+    <link rel="apple-touch-icon" href="<?php echo app_base_url('assets/img/pha.jpeg'); ?>">
+    <?php render_theme_boot(rtrim(app_base_url(), '/')); ?>
     <title>Connexion — Pharmacie Blessing</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="assets/css/logo-anim.css">
+    <link rel="stylesheet" href="assets/css/theme.css">
     <style>
         :root {
             --pb-blue: #1d4ed8;
@@ -212,6 +219,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 <body>
+<div class="d-flex justify-content-center pt-3"><?php render_theme_switch(); ?></div>
 <div class="login-shell">
     <img src="assets/img/pha.jpeg" alt="Pharmacie Blessing" class="login-logo logo-clock">
     <h1 class="login-title">Pharmacie Blessing</h1>
@@ -246,6 +254,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script src="assets/js/theme.js"></script>
 <script>
 document.getElementById('togglePassword').addEventListener('click', function () {
     var input = document.getElementById('password');

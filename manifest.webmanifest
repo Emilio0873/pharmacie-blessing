@@ -1,0 +1,25 @@
+{
+  "name": "Pharmacie Blessing",
+  "short_name": "Blessing",
+  "description": "Gestion et vitrine de la Pharmacie Blessing",
+  "start_url": "./index.php",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#020617",
+  "theme_color": "#1d4ed8",
+  "icons": [
+    {
+      "src": "assets/img/pha.jpeg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "assets/img/pha.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any maskable"
+    }
+  ]
+}
