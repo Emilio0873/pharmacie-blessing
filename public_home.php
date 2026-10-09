@@ -164,7 +164,7 @@ $featuredProducts = $pdo->query(
                         <i class="fa-solid fa-location-dot"></i>
                         <div>
                             <strong>Adresse</strong>
-                            <span>Kinshasa, République Démocratique du Congo</span>
+                            <span>Kinshasa, République démocratique du Congo</span>
                         </div>
                     </li>
                     <li>

@@ -64,7 +64,7 @@ render_public_chrome_start('Mes réservations — Pharmacie Blessing');
                                 <strong><?php echo htmlspecialchars($reservation['reference']); ?></strong>
                                 <div class="reserve-meta">
                                     Retrait le <?php echo date('d/m/Y', strtotime($reservation['pickup_date'])); ?>
-                                    · En attente du facturier
+                                    · <?php echo (($reservation['status'] ?? '') === 'payee') ? 'Payée' : 'En attente du facturier'; ?>
                                 </div>
                             </div>
                             <div><?php echo number_format((float)$reservation['subtotal'], 0, ',', ' '); ?> FC</div>

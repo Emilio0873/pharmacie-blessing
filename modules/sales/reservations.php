@@ -19,7 +19,7 @@ require_once '../../includes/header.php';
 <div class="row mb-4 align-items-center">
     <div class="col-md-8">
         <h3 class="fw-bold mb-1">Réservations en ligne</h3>
-        <p class="text-muted mb-0">Demandes envoyées par l’espace client. Elles attendent le facturier. Aucune n’est transmise à la caisse ni au livreur, et le stock n’est pas diminué.</p>
+        <p class="text-muted mb-0">Demandes de l’espace client. Quand le client vient payer, le facturier valide le paiement : la vente passe en caisse et chez le livreur.</p>
     </div>
 </div>
 
@@ -34,17 +34,19 @@ require_once '../../includes/header.php';
                         <th>Téléphone</th>
                         <th>Retrait prévu</th>
                         <th>Produits</th>
-                        <th>Montant prévisionnel</th>
+                        <th>Montant</th>
+                        <th>Statut</th>
                         <th class="text-end pe-4">Détail</th>
                     </tr>
                 </thead>
                 <tbody>
                     <?php if (count($reservations) === 0): ?>
                         <tr>
-                            <td colspan="7" class="text-center py-5 text-muted">Aucune réservation en ligne.</td>
+                            <td colspan="8" class="text-center py-5 text-muted">Aucune réservation en ligne.</td>
                         </tr>
                     <?php else: ?>
                         <?php foreach ($reservations as $reservation): ?>
+                            <?php $paid = ($reservation['status'] ?? '') === 'payee' || !empty($reservation['sale_id']); ?>
                             <tr>
                                 <td class="ps-4 fw-bold text-primary"><?php echo htmlspecialchars($reservation['reference']); ?></td>
                                 <td><?php echo htmlspecialchars($reservation['last_name'] . ' ' . $reservation['first_name']); ?></td>
@@ -52,8 +54,17 @@ require_once '../../includes/header.php';
                                 <td><?php echo date('d/m/Y', strtotime($reservation['pickup_date'])); ?></td>
                                 <td><?php echo (int)$reservation['line_count']; ?></td>
                                 <td class="fw-bold"><?php echo format_currency($reservation['subtotal']); ?></td>
+                                <td>
+                                    <?php if ($paid): ?>
+                                        <span class="badge bg-success">Payée</span>
+                                    <?php else: ?>
+                                        <span class="badge bg-warning text-dark">En attente</span>
+                                    <?php endif; ?>
+                                </td>
                                 <td class="text-end pe-4">
-                                    <a class="btn btn-sm btn-primary" href="reservation_view.php?id=<?php echo (int)$reservation['id']; ?>">Consulter</a>
+                                    <a class="btn btn-sm btn-primary" href="reservation_view.php?id=<?php echo (int)$reservation['id']; ?>">
+                                        <?php echo $paid ? 'Voir' : 'Valider'; ?>
+                                    </a>
                                 </td>
                             </tr>
                         <?php endforeach; ?>

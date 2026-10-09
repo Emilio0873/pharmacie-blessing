@@ -378,8 +378,8 @@ INSERT INTO app_settings (setting_key, setting_value)
 VALUES
   ('business_name', 'PHARMACIE BLESSING'),
   ('business_subtitle', 'Dépôt Pharmaceutique de Référence'),
-  ('business_address', 'Kinshasa, République Démocratique du Congo'),
-  ('business_phone', '0965431594'),
+  ('business_address', 'Kinshasa, République démocratique du Congo'),
+  ('business_phone', '+243 965 431 594'),
   ('business_email', 'contact@blessingpharmacie.com'),
   ('business_legal_ids', 'RCCM: CD/KNG/RCCM/20-B-00123 | NIF: A2203947T')
 ON DUPLICATE KEY UPDATE

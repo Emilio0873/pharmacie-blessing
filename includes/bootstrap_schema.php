@@ -129,12 +129,27 @@ function ensure_reservation_tables(PDO $pdo): void {
         CONSTRAINT fk_reservation_items_reservation FOREIGN KEY (reservation_id) REFERENCES reservations(id)
             ON UPDATE CASCADE ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    try {
+        $pdo->query("SELECT sale_id FROM reservations LIMIT 1");
+    } catch (Throwable $e) {
+        try {
+            $pdo->exec("ALTER TABLE reservations ADD COLUMN sale_id INT NULL");
+        } catch (Throwable $e2) {
+            // ignore
+        }
+    }
 }
 
 function sync_business_phone(PDO $pdo): void {
     try {
-        $stmt = $pdo->prepare("UPDATE app_settings SET setting_value = ? WHERE setting_key = 'business_phone' AND setting_value IN (?, ?, ?)");
-        $stmt->execute(['0965431594', '+243 972 573 971', '+243 965 431 594', '0965 431 594']);
+        $phone = '+243 965 431 594';
+        $address = 'Kinshasa, République démocratique du Congo';
+
+        $pdo->prepare("INSERT INTO app_settings (setting_key, setting_value) VALUES ('business_phone', ?)
+            ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([$phone]);
+        $pdo->prepare("INSERT INTO app_settings (setting_key, setting_value) VALUES ('business_address', ?)
+            ON DUPLICATE KEY UPDATE setting_value = VALUES(setting_value)")->execute([$address]);
     } catch (Throwable $e) {
         // settings table may not exist yet
     }
