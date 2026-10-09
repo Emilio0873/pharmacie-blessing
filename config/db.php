@@ -33,6 +33,8 @@ $options = [
 
 try {
     $pdo = new PDO($dsn, $user, $pass, $options);
+    require_once __DIR__ . '/../includes/bootstrap_schema.php';
+    bootstrap_schema_if_needed($pdo);
 } catch (\PDOException $e) {
     throw new \PDOException($e->getMessage(), (int)$e->getCode());
 }
