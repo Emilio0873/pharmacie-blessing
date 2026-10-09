@@ -363,4 +363,12 @@ function get_business_profile($pdo) {
         'legal_ids' => get_app_setting($pdo, 'business_legal_ids', 'RCCM: CD/KNG/RCCM/20-B-00123 | NIF: A2203947T')
     ];
 }
+
+function format_reservation_number($id) {
+    return 'RES-' . str_pad((int)$id, 6, '0', STR_PAD_LEFT);
+}
+
+function reservation_phone_key($phone) {
+    return preg_replace('/\D+/', '', (string)$phone);
+}
 ?>

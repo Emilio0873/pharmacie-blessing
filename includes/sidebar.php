@@ -58,6 +58,11 @@
                 Vente Rapide (POS)
             </a>
         </li>
+        <li class="mb-2">
+            <a href="<?php echo $base_url; ?>/modules/sales/reservations.php" class="nav-link p-3 rounded <?php echo basename($_SERVER['PHP_SELF']) === 'reservations.php' || basename($_SERVER['PHP_SELF']) === 'reservation_view.php' ? 'active' : ''; ?>">
+                Réservations en ligne
+            </a>
+        </li>
         <?php endif; ?>
 
         <?php if (has_role('Super Admin') || has_role('Admin') || has_role('Magasinier')): ?>

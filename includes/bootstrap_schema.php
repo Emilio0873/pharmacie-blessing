@@ -19,6 +19,7 @@ function bootstrap_schema_if_needed(PDO $pdo): void {
     if (!$needsImport) {
         seed_default_categories($pdo);
         sync_business_phone($pdo);
+        ensure_reservation_tables($pdo);
         return;
     }
 
@@ -54,6 +55,40 @@ function bootstrap_schema_if_needed(PDO $pdo): void {
 
     seed_default_categories($pdo);
     sync_business_phone($pdo);
+    ensure_reservation_tables($pdo);
+}
+
+function ensure_reservation_tables(PDO $pdo): void {
+    $pdo->exec("CREATE TABLE IF NOT EXISTS reservations (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        reference VARCHAR(30) NOT NULL UNIQUE,
+        last_name VARCHAR(100) NOT NULL,
+        first_name VARCHAR(100) NOT NULL,
+        phone VARCHAR(30) NOT NULL,
+        email VARCHAR(150) NULL,
+        address VARCHAR(255) NULL,
+        pickup_date DATE NOT NULL,
+        status VARCHAR(40) NOT NULL DEFAULT 'en_attente',
+        subtotal DECIMAL(12,2) NOT NULL DEFAULT 0,
+        created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_reservations_phone (phone),
+        INDEX idx_reservations_pickup (pickup_date),
+        INDEX idx_reservations_status (status)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+    $pdo->exec("CREATE TABLE IF NOT EXISTS reservation_items (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        reservation_id INT NOT NULL,
+        product_id INT NOT NULL,
+        product_name VARCHAR(255) NOT NULL,
+        product_code VARCHAR(100) NULL,
+        qty INT NOT NULL,
+        unit_price DECIMAL(12,2) NOT NULL DEFAULT 0,
+        line_total DECIMAL(12,2) NOT NULL DEFAULT 0,
+        INDEX idx_reservation_items_reservation (reservation_id),
+        CONSTRAINT fk_reservation_items_reservation FOREIGN KEY (reservation_id) REFERENCES reservations(id)
+            ON UPDATE CASCADE ON DELETE CASCADE
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
 }
 
 function sync_business_phone(PDO $pdo): void {

@@ -1,0 +1,293 @@
+<?php
+require_once 'config/db.php';
+require_once 'includes/functions.php';
+require_once 'includes/ui_shell.php';
+require_once 'includes/public_chrome.php';
+
+$error = '';
+$products = $pdo->query(
+    "SELECT p.id, p.name, p.code, p.sell_price, p.qty, p.image, c.name AS category_name
+     FROM products p
+     LEFT JOIN categories c ON p.category_id = c.id
+     WHERE p.qty > 0
+     ORDER BY p.name ASC"
+)->fetchAll();
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    if (!csrf_valid()) {
+        $error = 'La page a expiré. Rechargez-la puis validez à nouveau.';
+    } else {
+        $lastName = trim(strip_tags($_POST['last_name'] ?? ''));
+        $firstName = trim(strip_tags($_POST['first_name'] ?? ''));
+        $phone = trim(strip_tags($_POST['phone'] ?? ''));
+        $email = trim(strip_tags($_POST['email'] ?? ''));
+        $address = trim(strip_tags($_POST['address'] ?? ''));
+        $pickup = $_POST['pickup_date'] ?? '';
+        $cart = json_decode($_POST['cart_json'] ?? '[]', true);
+
+        if ($lastName === '' || $firstName === '') {
+            $error = 'Indiquez le nom et le prénom.';
+        } elseif (strlen(reservation_phone_key($phone)) < 8) {
+            $error = 'Indiquez un numéro de téléphone valide.';
+        } elseif ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+            $error = 'L’adresse e-mail n’est pas valide.';
+        } elseif (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $pickup) || $pickup < date('Y-m-d')) {
+            $error = 'Choisissez une date de retrait à partir d’aujourd’hui.';
+        } elseif (!is_array($cart) || count($cart) === 0) {
+            $error = 'Ajoutez au moins un produit au panier.';
+        } else {
+            try {
+                $pdo->beginTransaction();
+                $lines = [];
+                $subtotal = 0;
+                foreach ($cart as $item) {
+                    $productId = (int)($item['id'] ?? 0);
+                    $qty = (int)($item['qty'] ?? 0);
+                    if ($productId <= 0 || $qty <= 0) {
+                        throw new Exception('Article invalide dans le panier.');
+                    }
+                    $stmt = $pdo->prepare("SELECT id, name, code, sell_price, qty FROM products WHERE id = ?");
+                    $stmt->execute([$productId]);
+                    $product = $stmt->fetch();
+                    if (!$product) {
+                        throw new Exception('Un produit du panier n’est plus disponible.');
+                    }
+                    if ($qty > (int)$product['qty']) {
+                        throw new Exception('La quantité demandée pour « ' . $product['name'] . ' » dépasse le stock affiché (' . (int)$product['qty'] . ').');
+                    }
+                    $price = (float)$product['sell_price'];
+                    $lineTotal = $price * $qty;
+                    $subtotal += $lineTotal;
+                    $lines[] = [
+                        'product_id' => (int)$product['id'],
+                        'product_name' => $product['name'],
+                        'product_code' => $product['code'],
+                        'qty' => $qty,
+                        'unit_price' => $price,
+                        'line_total' => $lineTotal,
+                    ];
+                }
+
+                $tempRef = 'TMP-' . bin2hex(random_bytes(8));
+                $stmt = $pdo->prepare("INSERT INTO reservations
+                    (reference, last_name, first_name, phone, email, address, pickup_date, status, subtotal)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, 'en_attente', ?)");
+                $stmt->execute([
+                    $tempRef,
+                    $lastName,
+                    $firstName,
+                    $phone,
+                    $email !== '' ? $email : null,
+                    $address !== '' ? $address : null,
+                    $pickup,
+                    $subtotal,
+                ]);
+                $reservationId = (int)$pdo->lastInsertId();
+                $reference = format_reservation_number($reservationId);
+                $pdo->prepare("UPDATE reservations SET reference = ? WHERE id = ?")->execute([$reference, $reservationId]);
+
+                $lineStmt = $pdo->prepare("INSERT INTO reservation_items
+                    (reservation_id, product_id, product_name, product_code, qty, unit_price, line_total)
+                    VALUES (?, ?, ?, ?, ?, ?, ?)");
+                foreach ($lines as $line) {
+                    $lineStmt->execute([
+                        $reservationId,
+                        $line['product_id'],
+                        $line['product_name'],
+                        $line['product_code'],
+                        $line['qty'],
+                        $line['unit_price'],
+                        $line['line_total'],
+                    ]);
+                }
+
+                $pdo->commit();
+                $_SESSION['reservation_phone'] = reservation_phone_key($phone);
+                redirect('proforma.php?ref=' . urlencode($reference));
+            } catch (Exception $e) {
+                if ($pdo->inTransaction()) {
+                    $pdo->rollBack();
+                }
+                $error = $e->getMessage();
+            }
+        }
+    }
+}
+
+render_public_chrome_start('Réserver une commande — Pharmacie Blessing');
+?>
+
+<section class="section section-products">
+    <div class="container">
+        <div class="section-head">
+            <span class="section-kicker">Espace client</span>
+            <h2 class="section-title">Réserver une commande</h2>
+            <p class="section-text">Choisissez les produits, la date de retrait au dépôt, puis vos coordonnées. Cette réservation n’est pas un paiement : elle est transmise au facturier.</p>
+        </div>
+
+        <?php if ($error): ?>
+            <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
+        <?php endif; ?>
+
+        <form method="post" id="reservationForm" class="row g-4">
+            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrf_token()); ?>">
+            <input type="hidden" name="cart_json" id="cartJson" value="[]">
+
+            <div class="col-12 col-lg-7">
+                <div class="reserve-panel">
+                    <h3 class="reserve-title">Produits disponibles</h3>
+                    <?php if (empty($products)): ?>
+                        <p class="mb-0 text-muted">Aucun produit en stock pour le moment.</p>
+                    <?php else: ?>
+                        <div class="reserve-products">
+                            <?php foreach ($products as $product): ?>
+                                <article class="reserve-product"
+                                    data-id="<?php echo (int)$product['id']; ?>"
+                                    data-name="<?php echo htmlspecialchars($product['name'], ENT_QUOTES, 'UTF-8'); ?>"
+                                    data-price="<?php echo (float)$product['sell_price']; ?>"
+                                    data-stock="<?php echo (int)$product['qty']; ?>">
+                                    <div>
+                                        <strong><?php echo htmlspecialchars($product['name']); ?></strong>
+                                        <div class="reserve-meta"><?php echo htmlspecialchars($product['category_name'] ?: 'Produit'); ?> · Stock <?php echo (int)$product['qty']; ?></div>
+                                    </div>
+                                    <div class="reserve-product-side">
+                                        <span><?php echo number_format((float)$product['sell_price'], 0, ',', ' '); ?> FC</span>
+                                        <button type="button" class="btn-reserve-add">Ajouter</button>
+                                    </div>
+                                </article>
+                            <?php endforeach; ?>
+                        </div>
+                    <?php endif; ?>
+                </div>
+            </div>
+
+            <div class="col-12 col-lg-5">
+                <div class="reserve-panel">
+                    <h3 class="reserve-title">Panier</h3>
+                    <div id="cartEmpty" class="text-muted">Le panier est vide.</div>
+                    <div id="cartLines"></div>
+                    <div class="reserve-total">
+                        <span>Montant prévisionnel</span>
+                        <strong id="cartTotal">0 FC</strong>
+                    </div>
+
+                    <h3 class="reserve-title mt-4">Retrait et coordonnées</h3>
+                    <div class="mb-3">
+                        <label class="form-label" for="pickup_date">Date de retrait au dépôt</label>
+                        <input type="date" class="form-control" id="pickup_date" name="pickup_date" required min="<?php echo date('Y-m-d'); ?>" value="<?php echo htmlspecialchars($_POST['pickup_date'] ?? ''); ?>">
+                    </div>
+                    <div class="row g-2">
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label" for="last_name">Nom</label>
+                            <input type="text" class="form-control" id="last_name" name="last_name" required maxlength="100" value="<?php echo htmlspecialchars($_POST['last_name'] ?? ''); ?>">
+                        </div>
+                        <div class="col-12 col-sm-6">
+                            <label class="form-label" for="first_name">Prénom</label>
+                            <input type="text" class="form-control" id="first_name" name="first_name" required maxlength="100" value="<?php echo htmlspecialchars($_POST['first_name'] ?? ''); ?>">
+                        </div>
+                    </div>
+                    <div class="mb-3 mt-2">
+                        <label class="form-label" for="phone">Téléphone</label>
+                        <input type="tel" class="form-control" id="phone" name="phone" required maxlength="30" value="<?php echo htmlspecialchars($_POST['phone'] ?? ''); ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="email">E-mail (facultatif)</label>
+                        <input type="email" class="form-control" id="email" name="email" maxlength="150" value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label" for="address">Adresse ou contact utile au dépôt (facultatif)</label>
+                        <input type="text" class="form-control" id="address" name="address" maxlength="255" value="<?php echo htmlspecialchars($_POST['address'] ?? ''); ?>">
+                    </div>
+                    <button type="submit" class="btn-hero btn-hero-primary w-100" id="btnReserve" <?php echo empty($products) ? 'disabled' : ''; ?>>Valider la réservation</button>
+                    <p class="reserve-note">La facture générée est une pro forma. Le stock n’est pas retiré et le livreur n’est pas sollicité.</p>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+
+<script>
+(function () {
+    var cart = [];
+    var linesEl = document.getElementById('cartLines');
+    var emptyEl = document.getElementById('cartEmpty');
+    var totalEl = document.getElementById('cartTotal');
+    var jsonEl = document.getElementById('cartJson');
+
+    function money(n) {
+        return Math.round(n).toLocaleString('fr-FR') + ' FC';
+    }
+
+    function render() {
+        if (cart.length === 0) {
+            linesEl.innerHTML = '';
+            emptyEl.classList.remove('d-none');
+            totalEl.textContent = '0 FC';
+            jsonEl.value = '[]';
+            return;
+        }
+        emptyEl.classList.add('d-none');
+        var total = 0;
+        linesEl.innerHTML = cart.map(function (item, index) {
+            var line = item.price * item.qty;
+            total += line;
+            return '<div class="reserve-line">' +
+                '<div><strong>' + item.name + '</strong><div class="reserve-meta">' + money(item.price) + '</div></div>' +
+                '<div class="reserve-qty">' +
+                    '<button type="button" data-index="' + index + '" data-delta="-1">−</button>' +
+                    '<span>' + item.qty + '</span>' +
+                    '<button type="button" data-index="' + index + '" data-delta="1">+</button>' +
+                '</div>' +
+                '<div>' + money(line) + '</div>' +
+            '</div>';
+        }).join('');
+        totalEl.textContent = money(total);
+        jsonEl.value = JSON.stringify(cart.map(function (item) {
+            return { id: item.id, qty: item.qty };
+        }));
+    }
+
+    document.querySelectorAll('.btn-reserve-add').forEach(function (button) {
+        button.addEventListener('click', function () {
+            var card = button.closest('.reserve-product');
+            var id = card.dataset.id;
+            var stock = parseInt(card.dataset.stock, 10) || 0;
+            var existing = cart.find(function (item) { return item.id === id; });
+            if (existing) {
+                if (existing.qty >= stock) return;
+                existing.qty += 1;
+            } else {
+                cart.push({
+                    id: id,
+                    name: card.dataset.name,
+                    price: parseFloat(card.dataset.price) || 0,
+                    qty: 1,
+                    stock: stock
+                });
+            }
+            render();
+        });
+    });
+
+    linesEl.addEventListener('click', function (event) {
+        var button = event.target.closest('button');
+        if (!button) return;
+        var index = parseInt(button.dataset.index, 10);
+        var delta = parseInt(button.dataset.delta, 10);
+        if (!cart[index]) return;
+        cart[index].qty += delta;
+        if (cart[index].qty > cart[index].stock) cart[index].qty = cart[index].stock;
+        if (cart[index].qty <= 0) cart.splice(index, 1);
+        render();
+    });
+
+    document.getElementById('reservationForm').addEventListener('submit', function (event) {
+        if (cart.length === 0) {
+            event.preventDefault();
+            alert('Ajoutez au moins un produit au panier.');
+        }
+    });
+})();
+</script>
+
+<?php render_public_chrome_end(); ?>

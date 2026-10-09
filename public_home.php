@@ -2,6 +2,7 @@
 require_once 'config/db.php';
 require_once 'includes/functions.php';
 require_once 'includes/ui_shell.php';
+require_once 'includes/public_chrome.php';
 
 $featuredProducts = $pdo->query(
     "SELECT p.*, c.name as category_name
@@ -33,27 +34,7 @@ $featuredProducts = $pdo->query(
 </head>
 <body class="public-body">
 
-<nav class="navbar navbar-expand-lg public-nav">
-    <div class="container py-2">
-        <a class="navbar-brand d-flex align-items-center gap-2" href="index.php">
-            <img src="assets/img/pha.jpeg" alt="Pharmacie Blessing" class="nav-logo logo-clock">
-            <span>Pharmacie Blessing</span>
-        </a>
-        <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navContent" aria-controls="navContent" aria-expanded="false" aria-label="Menu">
-            <i class="fa-solid fa-bars-staggered text-primary"></i>
-        </button>
-        <div class="collapse navbar-collapse" id="navContent">
-            <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-3">
-                <li class="nav-item"><a class="nav-link" href="#accueil">Accueil</a></li>
-                <li class="nav-item"><a class="nav-link" href="#mission">Mission</a></li>
-                <li class="nav-item"><a class="nav-link" href="#produits">Médicaments</a></li>
-                <li class="nav-item"><a class="nav-link" href="#contact">Contact</a></li>
-            </ul>
-            <?php render_theme_switch(); ?>
-            <a href="login.php" class="btn-nav-login"><i class="fa-solid fa-right-to-bracket"></i> Se connecter</a>
-        </div>
-    </div>
-</nav>
+<?php render_public_nav(); ?>
 
 <section id="accueil" class="hero">
     <div class="hero-slides" aria-hidden="true">
@@ -67,8 +48,8 @@ $featuredProducts = $pdo->query(
         <p class="hero-headline">Votre pharmacie de proximité, accessible en ligne.</p>
         <p class="hero-lead">Médicaments de qualité, conseils professionnels et stock suivi en temps réel.</p>
         <div class="hero-actions">
-            <a href="#produits" class="btn-hero btn-hero-primary">Explorer les produits</a>
-            <a href="#contact" class="btn-hero btn-hero-ghost">Nous contacter</a>
+            <a href="reservation.php" class="btn-hero btn-hero-primary">Réserver une commande</a>
+            <a href="#produits" class="btn-hero btn-hero-ghost">Explorer les produits</a>
         </div>
     </div>
 </section>
@@ -108,9 +89,12 @@ $featuredProducts = $pdo->query(
                 <h2 class="section-title">Produits disponibles</h2>
                 <p class="section-text">Consultez les médicaments en stock et filtrez en temps réel.</p>
             </div>
-            <div class="search-field">
-                <i class="fa-solid fa-magnifying-glass"></i>
-                <input type="search" id="liveSearchInput" placeholder="Rechercher un médicament…" autocomplete="off">
+            <div class="d-flex flex-column flex-sm-row align-items-stretch gap-2">
+                <a href="reservation.php" class="btn-hero btn-hero-primary text-center">Réserver une commande</a>
+                <div class="search-field">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="search" id="liveSearchInput" placeholder="Rechercher un médicament…" autocomplete="off">
+                </div>
             </div>
         </div>
 

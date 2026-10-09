@@ -200,8 +200,16 @@ html[data-theme="dark"] .search-field {
 html[data-theme="dark"] .search-field input,
 html[data-theme="dark"] .section-text,
 html[data-theme="dark"] .mission-item p,
-html[data-theme="dark"] .product-desc {
+html[data-theme="dark"] .product-desc,
+html[data-theme="dark"] .reserve-meta,
+html[data-theme="dark"] .reserve-note {
     color: #cbd5e1;
+}
+
+html[data-theme="dark"] .reserve-panel {
+    background: #0b1220;
+    color: #e2e8f0;
+    border-color: #1e293b;
 }
 
 html[data-theme="dark"] .pb-theme {

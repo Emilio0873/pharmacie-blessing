@@ -654,3 +654,129 @@ img {
         padding-right: 0.25rem;
     }
 }
+
+.reserve-panel {
+    background: var(--pb-white);
+    border: 1px solid rgba(15, 23, 42, 0.06);
+    border-radius: 18px;
+    padding: 1.25rem;
+}
+
+.reserve-title {
+    font-size: 1.15rem;
+    margin: 0 0 1rem;
+}
+
+.reserve-products {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    max-height: 28rem;
+    overflow: auto;
+}
+
+.reserve-product,
+.reserve-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-bottom: 1px solid var(--pb-line);
+    color: inherit;
+}
+
+.reserve-meta {
+    color: var(--pb-muted);
+    font-size: 0.82rem;
+}
+
+.reserve-product-side,
+.reserve-qty {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    white-space: nowrap;
+}
+
+.btn-reserve-add,
+.reserve-qty button {
+    border: 0;
+    background: var(--pb-blue);
+    color: #fff;
+    border-radius: 8px;
+    font-weight: 700;
+    padding: 0.35rem 0.7rem;
+}
+
+.reserve-total,
+.proforma-sum {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 1rem;
+    font-size: 1.05rem;
+}
+
+.reserve-note,
+.proforma-legal {
+    margin: 0.85rem 0 0;
+    color: var(--pb-muted);
+    font-size: 0.85rem;
+}
+
+.proforma-sheet {
+    background: #fff;
+    color: #0f172a;
+    border-radius: 18px;
+    padding: 1.5rem;
+    border: 1px solid var(--pb-line);
+}
+
+.proforma-banner {
+    display: inline-block;
+    background: #fef3c7;
+    color: #92400e;
+    font-weight: 800;
+    border-radius: 999px;
+    padding: 0.35rem 0.8rem;
+    margin-bottom: 1rem;
+}
+
+.proforma-head,
+.proforma-client {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+}
+
+.proforma-head h1,
+.proforma-client h2 {
+    font-size: 1.25rem;
+    margin: 0 0 0.35rem;
+}
+
+.proforma-ref {
+    font-weight: 800;
+    color: var(--pb-blue-deep);
+}
+
+.proforma-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.proforma-table th,
+.proforma-table td {
+    text-align: left;
+    padding: 0.65rem 0.35rem;
+    border-bottom: 1px solid var(--pb-line);
+}
+
+@media print {
+    .public-nav, .public-footer, .btn-hero, .pb-tools { display: none !important; }
+    body.public-body { background: #fff !important; }
+    .proforma-sheet { border: 0; padding: 0; }
+}
