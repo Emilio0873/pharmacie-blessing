@@ -181,8 +181,25 @@ html[data-theme="dark"] .section-title,
 html[data-theme="dark"] .mission-item h3,
 html[data-theme="dark"] .product-name,
 html[data-theme="dark"] .hours-panel h3,
-html[data-theme="dark"] .contact-list strong {
+html[data-theme="dark"] .contact-list strong,
+html[data-theme="dark"] .account-card h3 {
     color: #e2e8f0 !important;
+}
+
+html[data-theme="dark"] .public-nav .navbar-collapse {
+    border-top-color: #1e293b;
+}
+
+html[data-theme="dark"] .btn-nav-ghost {
+    color: #e2e8f0 !important;
+    border-color: rgba(147, 197, 253, 0.35);
+}
+
+html[data-theme="dark"] .section-account,
+html[data-theme="dark"] .account-card {
+    background: #0b1220;
+    border-color: #1e293b;
+    color: #e2e8f0;
 }
 
 html[data-theme="dark"] .section-mission,
