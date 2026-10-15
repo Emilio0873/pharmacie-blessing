@@ -202,6 +202,72 @@ html[data-theme="dark"] .account-card {
     color: #e2e8f0;
 }
 
+html[data-theme="dark"] .auth-stage {
+    background:
+        radial-gradient(ellipse 70% 50% at 0% 0%, rgba(29, 78, 216, 0.22), transparent 55%),
+        linear-gradient(180deg, #020617 0%, #0b1220 100%);
+}
+
+html[data-theme="dark"] .auth-shell {
+    background: #0b1220;
+    border-color: #1e293b;
+    box-shadow: 0 30px 60px rgba(2, 6, 23, 0.55);
+}
+
+html[data-theme="dark"] .auth-panel {
+    background: linear-gradient(180deg, #0f172a 0%, #0b1220 100%);
+}
+
+html[data-theme="dark"] .auth-tabs {
+    background: #111827;
+    border-color: #1e293b;
+}
+
+html[data-theme="dark"] .auth-tab {
+    color: #94a3b8;
+}
+
+html[data-theme="dark"] .auth-tab.is-active {
+    background: #1e293b;
+    color: #e2e8f0;
+    box-shadow: none;
+}
+
+html[data-theme="dark"] .auth-panel-head h2 {
+    color: #dbeafe;
+}
+
+html[data-theme="dark"] .auth-panel-head p,
+html[data-theme="dark"] .auth-switch,
+html[data-theme="dark"] .auth-staff {
+    color: #94a3b8;
+}
+
+html[data-theme="dark"] .auth-field > span {
+    color: #cbd5e1;
+}
+
+html[data-theme="dark"] .auth-input input {
+    background: #020617;
+    border-color: #334155;
+    color: #e2e8f0;
+}
+
+html[data-theme="dark"] .auth-input input:focus {
+    border-color: #60a5fa;
+    background: #020617;
+}
+
+html[data-theme="dark"] .auth-eye:hover {
+    background: #1e293b;
+}
+
+html[data-theme="dark"] .auth-alert {
+    background: rgba(127, 29, 29, 0.35);
+    border-color: #7f1d1d;
+    color: #fecaca;
+}
+
 html[data-theme="dark"] .section-mission,
 html[data-theme="dark"] .section-products,
 html[data-theme="dark"] .section-contact,

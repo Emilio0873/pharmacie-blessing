@@ -40,40 +40,80 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && csrf_valid()) {
     }
 }
 
-render_public_chrome_start('Connexion client — Pharmacie Blessing');
+$emailValue = htmlspecialchars($_POST['email'] ?? '');
+render_public_chrome_start('Se connecter — Pharmacie Blessing');
 ?>
 
-<section class="section section-products">
-    <div class="container" style="max-width: 480px;">
-        <div class="section-head">
-            <span class="section-kicker">Espace client</span>
-            <h2 class="section-title">Se connecter</h2>
-            <p class="section-text">Accédez à vos réservations et factures.</p>
-        </div>
+<section class="auth-stage">
+    <div class="auth-shell">
+        <aside class="auth-visual" aria-hidden="true">
+            <div class="auth-visual-bg" style="background-image:url('assets/img/a.jpeg');"></div>
+            <div class="auth-visual-veil"></div>
+            <div class="auth-visual-content">
+                <img src="assets/img/pha.jpeg" alt="" class="auth-brand-mark logo-clock">
+                <p class="auth-brand-name">Pharmacie Blessing</p>
+                <h1 class="auth-visual-title">Votre espace santé, toujours à portée de main.</h1>
+                <ul class="auth-benefits">
+                    <li><i class="fa-solid fa-receipt"></i> Factures et proformas en un clic</li>
+                    <li><i class="fa-solid fa-truck-fast"></i> Suivi retrait &amp; livraison</li>
+                    <li><i class="fa-solid fa-shield-heart"></i> Compte sécurisé et personnel</li>
+                </ul>
+            </div>
+        </aside>
 
-        <form method="post" class="reserve-panel">
-            <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrf_token()); ?>">
-            <?php if ($error): ?>
-                <div class="alert alert-danger"><?php echo htmlspecialchars($error); ?></div>
-            <?php endif; ?>
-            <div class="mb-3">
-                <label class="form-label" for="email">E-mail</label>
-                <input type="email" class="form-control" id="email" name="email" required
-                       value="<?php echo htmlspecialchars($_POST['email'] ?? ''); ?>">
+        <div class="auth-panel">
+            <div class="auth-tabs" role="tablist" aria-label="Espace client">
+                <a class="auth-tab is-active" href="client_login.php" role="tab" aria-selected="true">Se connecter</a>
+                <a class="auth-tab" href="client_register.php" role="tab" aria-selected="false">Inscription</a>
             </div>
-            <div class="mb-3">
-                <label class="form-label" for="password">Mot de passe</label>
-                <input type="password" class="form-control" id="password" name="password" required>
+
+            <div class="auth-panel-head">
+                <h2>Bon retour</h2>
+                <p>Connectez-vous pour retrouver vos réservations et factures.</p>
             </div>
-            <button type="submit" class="btn-hero btn-hero-primary w-100">Connexion</button>
-            <p class="text-center mt-3 mb-0" style="color:var(--pb-muted);">
-                Pas encore de compte ? <a href="client_register.php">Créer un compte</a>
-            </p>
-            <p class="text-center mt-2 mb-0 small" style="color:var(--pb-muted);">
-                Personnel pharmacie : <a href="login.php">accès interne</a>
-            </p>
-        </form>
+
+            <form method="post" class="auth-form" autocomplete="on">
+                <input type="hidden" name="csrf_token" value="<?php echo htmlspecialchars(csrf_token()); ?>">
+                <?php if ($error): ?>
+                    <div class="auth-alert" role="alert"><i class="fa-solid fa-circle-exclamation"></i><?php echo htmlspecialchars($error); ?></div>
+                <?php endif; ?>
+
+                <label class="auth-field" for="email">
+                    <span>E-mail</span>
+                    <div class="auth-input">
+                        <i class="fa-solid fa-envelope"></i>
+                        <input type="email" id="email" name="email" required value="<?php echo $emailValue; ?>" placeholder="vous@email.com" autocomplete="email">
+                    </div>
+                </label>
+
+                <label class="auth-field" for="password">
+                    <span>Mot de passe</span>
+                    <div class="auth-input">
+                        <i class="fa-solid fa-lock"></i>
+                        <input type="password" id="password" name="password" required placeholder="••••••••" autocomplete="current-password">
+                        <button type="button" class="auth-eye" data-toggle-password="password" aria-label="Afficher le mot de passe"><i class="fa-solid fa-eye"></i></button>
+                    </div>
+                </label>
+
+                <button type="submit" class="auth-submit">Se connecter <i class="fa-solid fa-arrow-right"></i></button>
+            </form>
+
+            <p class="auth-switch">Pas encore de compte ? <a href="client_register.php">Créer un compte</a></p>
+            <p class="auth-staff"><a href="login.php">Accès personnel pharmacie</a></p>
+        </div>
     </div>
 </section>
+
+<script>
+document.querySelectorAll('[data-toggle-password]').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+        var input = document.getElementById(btn.getAttribute('data-toggle-password'));
+        if (!input) return;
+        var show = input.type === 'password';
+        input.type = show ? 'text' : 'password';
+        btn.innerHTML = show ? '<i class="fa-solid fa-eye-slash"></i>' : '<i class="fa-solid fa-eye"></i>';
+    });
+});
+</script>
 
 <?php render_public_chrome_end(); ?>
