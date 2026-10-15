@@ -18,9 +18,10 @@ window.PB_BASE = {$baseJson};
 HTML;
 }
 
-function render_theme_switch() {
+function render_theme_switch($variant = 'default') {
+    $wrapClass = $variant === 'dock' ? 'pb-tools pb-tools-dock' : 'pb-tools';
     echo <<<HTML
-<div class="pb-tools" role="group" aria-label="Apparence et application">
+<div class="{$wrapClass}" role="group" aria-label="Apparence et application">
     <div class="pb-theme" role="group" aria-label="Thème">
         <button type="button" data-theme-choice="system" title="Thème du système" aria-label="Thème du système"><i class="fas fa-display"></i></button>
         <button type="button" data-theme-choice="light" title="Thème clair" aria-label="Thème clair"><i class="fas fa-sun"></i></button>
@@ -31,4 +32,8 @@ function render_theme_switch() {
     </button>
 </div>
 HTML;
+}
+
+function render_public_theme_dock() {
+    render_theme_switch('dock');
 }

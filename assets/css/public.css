@@ -116,25 +116,6 @@ img {
     flex-shrink: 0;
 }
 
-.public-nav .pb-tools {
-    display: inline-flex;
-    align-items: center;
-    flex-wrap: nowrap;
-    gap: 0.4rem;
-    margin: 0;
-}
-
-.public-nav .pb-theme button {
-    width: 30px;
-    height: 30px;
-}
-
-.public-nav .pb-install {
-    padding: 0.35rem 0.65rem;
-    font-size: 0.78rem;
-    white-space: nowrap;
-}
-
 .nav-account-actions {
     display: inline-flex;
     align-items: center;
@@ -187,15 +168,6 @@ img {
 }
 
 @media (min-width: 992px) and (max-width: 1199.98px) {
-    .public-nav .pb-install span {
-        display: none;
-    }
-    .public-nav .pb-install {
-        width: 34px;
-        height: 34px;
-        padding: 0;
-        justify-content: center;
-    }
     .public-nav-links .nav-link {
         font-size: 0.84rem;
         padding: 0.35rem 0.4rem !important;
@@ -229,10 +201,6 @@ img {
         flex-wrap: wrap;
         margin-left: 0;
         gap: 0.65rem;
-    }
-    .public-nav .pb-tools {
-        width: 100%;
-        justify-content: space-between;
     }
     .nav-account-actions {
         width: 100%;

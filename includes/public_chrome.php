@@ -55,7 +55,6 @@ function render_public_nav() {
                 <li class="nav-item"><a class="nav-link" href="<?php echo public_anchor('contact'); ?>">Contact</a></li>
             </ul>
             <div class="public-nav-end">
-                <?php render_theme_switch(); ?>
                 <div class="nav-account-actions">
                     <?php if ($clientLogged): ?>
                         <a href="client_espace.php" class="btn-nav-login<?php echo in_array($self, $accountPages, true) ? ' is-active' : ''; ?>">
@@ -85,6 +84,7 @@ function render_public_chrome_end() {
         <div class="footer-copy">© <?php echo date('Y'); ?> Pharmacie Blessing. Tous droits réservés.</div>
     </div>
 </footer>
+<?php render_public_theme_dock(); ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="assets/js/theme.js"></script>
 </body>

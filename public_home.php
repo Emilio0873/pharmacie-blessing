@@ -265,6 +265,7 @@ $featuredProducts = $pdo->query(
     </div>
 </footer>
 
+<?php render_public_theme_dock(); ?>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script src="assets/js/public.js"></script>
 <script src="assets/js/theme.js"></script>
