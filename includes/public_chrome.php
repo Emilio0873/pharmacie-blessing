@@ -37,7 +37,7 @@ function render_public_nav() {
     $accountPages = ['client_espace.php', 'client_login.php', 'client_register.php', 'client_logout.php'];
     ?>
 <nav class="navbar navbar-expand-lg public-nav">
-    <div class="container py-2">
+    <div class="container public-nav-inner">
         <a class="navbar-brand d-flex align-items-center gap-2" href="index.php">
             <img src="assets/img/pha.jpeg" alt="Pharmacie Blessing" class="nav-logo logo-clock">
             <span>Pharmacie Blessing</span>
@@ -46,7 +46,7 @@ function render_public_nav() {
             <i class="fa-solid fa-bars-staggered text-primary"></i>
         </button>
         <div class="collapse navbar-collapse" id="navContent">
-            <ul class="navbar-nav mx-auto mb-2 mb-lg-0 gap-lg-2 gap-xl-3">
+            <ul class="navbar-nav public-nav-links">
                 <li class="nav-item"><a class="nav-link" href="<?php echo public_anchor('accueil'); ?>">Accueil</a></li>
                 <li class="nav-item"><a class="nav-link" href="<?php echo public_anchor('mission'); ?>">Mission</a></li>
                 <li class="nav-item"><a class="nav-link" href="<?php echo public_anchor('produits'); ?>">Médicaments</a></li>
@@ -54,21 +54,23 @@ function render_public_nav() {
                 <li class="nav-item"><a class="nav-link" href="<?php echo public_anchor('espace-client'); ?>">Espace client</a></li>
                 <li class="nav-item"><a class="nav-link" href="<?php echo public_anchor('contact'); ?>">Contact</a></li>
             </ul>
-            <?php render_theme_switch(); ?>
-            <div class="nav-account-actions d-flex flex-wrap align-items-center gap-2 ms-lg-2 mt-3 mt-lg-0">
-                <?php if ($clientLogged): ?>
-                    <a href="client_espace.php" class="btn-nav-login<?php echo in_array($self, $accountPages, true) ? ' is-active' : ''; ?>">
-                        <i class="fa-solid fa-user"></i> Mon espace
-                    </a>
-                    <a href="client_logout.php" class="btn-nav-ghost">Déconnexion</a>
-                <?php else: ?>
-                    <a href="client_login.php" class="btn-nav-ghost<?php echo $self === 'client_login.php' ? ' is-active' : ''; ?>">
-                        <i class="fa-solid fa-right-to-bracket"></i> Se connecter
-                    </a>
-                    <a href="client_register.php" class="btn-nav-login<?php echo $self === 'client_register.php' ? ' is-active' : ''; ?>">
-                        <i class="fa-solid fa-user-plus"></i> Créer un compte
-                    </a>
-                <?php endif; ?>
+            <div class="public-nav-end">
+                <?php render_theme_switch(); ?>
+                <div class="nav-account-actions">
+                    <?php if ($clientLogged): ?>
+                        <a href="client_espace.php" class="btn-nav-login<?php echo in_array($self, $accountPages, true) ? ' is-active' : ''; ?>">
+                            <i class="fa-solid fa-user"></i><span>Mon espace</span>
+                        </a>
+                        <a href="client_logout.php" class="btn-nav-ghost">Déconnexion</a>
+                    <?php else: ?>
+                        <a href="client_login.php" class="btn-nav-ghost<?php echo $self === 'client_login.php' ? ' is-active' : ''; ?>">
+                            <i class="fa-solid fa-right-to-bracket"></i><span>Se connecter</span>
+                        </a>
+                        <a href="client_register.php" class="btn-nav-login<?php echo $self === 'client_register.php' ? ' is-active' : ''; ?>">
+                            <i class="fa-solid fa-user-plus"></i><span>Créer un compte</span>
+                        </a>
+                    <?php endif; ?>
+                </div>
             </div>
         </div>
     </div>
